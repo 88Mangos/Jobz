@@ -29,13 +29,14 @@ struct ApplicationsOverTimeChart: View {
                     x: .value("Date", item.date, unit: .weekOfYear),
                     y: .value("Applications", item.count)
                 )
+                .foregroundStyle(Color.indigo) // Change this line color
                 .interpolationMethod(.monotone)
                 
                 AreaMark(
                     x: .value("Date", item.date, unit: .weekOfYear),
                     y: .value("Applications", item.count)
                 )
-                .foregroundStyle(.blue.opacity(0.1))
+                .foregroundStyle(Color.indigo.opacity(0.15)) // Change this area color
             }
             .frame(height: 220)
         }

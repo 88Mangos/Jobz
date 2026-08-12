@@ -29,6 +29,14 @@ struct StatusBreakdownChart: View {
                     }
                 }
             }
+            .chartForegroundStyleScale([
+                "Accepted": Color.green,
+                "Offered": Color.mint,
+                "Interviewing": Color.blue,
+                "Pending": Color.gray,
+                "Ghosted": Color.orange,
+                "Rejected": Color.red
+            ])
             .frame(height: 220)
         }
         .padding()
