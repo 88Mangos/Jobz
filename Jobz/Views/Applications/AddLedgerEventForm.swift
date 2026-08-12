@@ -33,7 +33,7 @@ struct AddLedgerEventForm: View {
                         Text(eventType.rawValue).tag(eventType)
                     }
                 }
-                DatePicker("Date", selection: $date, displayedComponents: .date)
+                DatePicker("Date", selection: $date, displayedComponents: [.date, .hourAndMinute])
                 Picker("Timezone", selection: $timezone) {
                     ForEach(supportedTimezones, id: \.self) { tzId in
                         Text(TimeZone.formattedLabel(for: tzId, date: date)).tag(tzId)
