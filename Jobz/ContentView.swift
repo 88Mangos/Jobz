@@ -8,6 +8,7 @@ struct ContentView: View {
         case summary
         case applications
         case ledger
+        case sqlLab
     }
     
     var body: some View {
@@ -25,6 +26,9 @@ struct ContentView: View {
                 NavigationLink(value: SidebarItem.ledger) {
                     Label("Ledger", systemImage: "text.book.closed")
                 }
+                NavigationLink(value: SidebarItem.sqlLab) {
+                    Label("SQL Lab", systemImage: "server.rack")
+                }
             }
             .navigationTitle("Jobz")
         } detail: {
@@ -38,6 +42,8 @@ struct ContentView: View {
                     ApplicationTableView()
                 case .ledger:
                     LedgerTableView()
+                case .sqlLab:
+                    SQLLabView()
                 case nil:
                     Text("Select an item from the sidebar")
                 }

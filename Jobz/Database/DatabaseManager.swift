@@ -29,4 +29,38 @@ public class DatabaseManager {
             fatalError("Database initialization failed: \(error)")
         }
     }
+    
+    public func executeSQL(_ sql: String) throws -> (columns: [String], rows: [[String: String]]) {
+        var finalSql = sql.trimmingCharacters(in: .whitespacesAndNewlines)
+        if finalSql.hasSuffix(";") {
+            finalSql.removeLast()
+        }
+        
+        // Ensure read-only safety by using read method which prevents modifications
+        return try dbQueue.read { db in
+            // Execute the query with a limit of 100 rows for safety
+            let wrappedSql = "SELECT * FROM (\(finalSql)) LIMIT 100"
+            let rows = try Row.fetchAll(db, sql: wrappedSql)
+            
+            guard let firstRow = rows.first else {
+                return ([], [])
+            }
+            
+            let columns = Array(firstRow.columnNames)
+            let resultRows = rows.map { row -> [String: String] in
+                var dict: [String: String] = [:]
+                for column in columns {
+                    let dbValue: DatabaseValue = row[column]
+                    if dbValue.isNull {
+                        dict[column] = "NULL"
+                    } else {
+                        dict[column] = dbValue.description
+                    }
+                }
+                return dict
+            }
+            
+            return (columns, resultRows)
+        }
+    }
 }

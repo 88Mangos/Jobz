@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- **SQL Lab**: Added a new "SQL Lab" tab to the sidebar that allows executing raw, read-only SQLite queries against the database. For security and to encourage using the GUI for modifications, this lab is strictly restricted to read-only queries (like SELECT), and results are safely limited to 100 rows to prevent UI hangs.
 - **Spreadsheet Edit Mode**: Added an "Edit Mode" toggle to the toolbar in the Applications and Ledger spreadsheet views. When disabled, the tables render as read-only text for significantly improved scrolling performance. When enabled, the tables use `TextField`, `Picker`, and `DatePicker` bindings to allow inline data entry.
 - **Role Name Expansion**: The `SummaryDetailView` now expands standard tech role abbreviations (e.g., SWE to Software Engineer). Any extra role notes are cleanly formatted on a new line beneath the primary role title.
 - **Summary Tab**: Added a new Summary tab featuring a read-only spreadsheet view (`SummaryTableView`) of the `application_status_view` with derived pipeline metrics (applied at, last updated, interview counts).
