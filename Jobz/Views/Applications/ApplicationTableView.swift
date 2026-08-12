@@ -3,8 +3,22 @@ import UniformTypeIdentifiers
 import GRDB
 
 struct MultiSelectLocationMenu: View {
-    let options = ["Remote", "San Francisco, CA", "New York, NY", "Seattle, WA", "Austin, TX"]
+    let defaultOptions = ["Remote", "San Francisco, CA", "New York, NY", "Seattle, WA", "Austin, TX"]
     @Binding var selectedLocationsStr: String?
+    @AppStorage("customLocations") private var customLocationsStr = ""
+    @State private var showingAddAlert = false
+    @State private var newLocation = ""
+    
+    var options: [String] {
+        let custom = customLocationsStr.split(separator: "|").map(String.init)
+        var all = defaultOptions
+        for c in custom {
+            if !all.contains(c) {
+                all.append(c)
+            }
+        }
+        return all
+    }
     
     var selectedLocations: Set<String> {
         guard let str = selectedLocationsStr, !str.isEmpty else { return [] }
@@ -21,12 +35,7 @@ struct MultiSelectLocationMenu: View {
                     } else {
                         current.insert(option)
                     }
-                    if current.isEmpty {
-                        selectedLocationsStr = nil
-                    } else {
-                        let sorted = options.filter { current.contains($0) }
-                        selectedLocationsStr = sorted.joined(separator: ", ")
-                    }
+                    updateSelection(current, withOptions: options)
                 }) {
                     HStack {
                         Text(option)
@@ -36,10 +45,49 @@ struct MultiSelectLocationMenu: View {
                     }
                 }
             }
+            Divider()
+            Button("Add Custom...") {
+                showingAddAlert = true
+            }
         } label: {
             Text(selectedLocationsStr?.isEmpty == false ? selectedLocationsStr! : "Select Locations")
                 .lineLimit(1)
                 .truncationMode(.tail)
+        }
+        .alert("Add Location", isPresented: $showingAddAlert) {
+            TextField("City, State", text: $newLocation)
+            Button("Cancel", role: .cancel) {
+                newLocation = ""
+            }
+            Button("Add") {
+                let trimmed = newLocation.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty && !options.contains(trimmed) {
+                    let currentCustom = customLocationsStr.split(separator: "|").map(String.init)
+                    let newCustom = currentCustom + [trimmed]
+                    customLocationsStr = newCustom.joined(separator: "|")
+                    
+                    var current = selectedLocations
+                    current.insert(trimmed)
+                    
+                    var all = defaultOptions
+                    for c in newCustom {
+                        if !all.contains(c) {
+                            all.append(c)
+                        }
+                    }
+                    updateSelection(current, withOptions: all)
+                }
+                newLocation = ""
+            }
+        }
+    }
+    
+    private func updateSelection(_ current: Set<String>, withOptions allOptions: [String]) {
+        if current.isEmpty {
+            selectedLocationsStr = nil
+        } else {
+            let sorted = allOptions.filter { current.contains($0) }
+            selectedLocationsStr = sorted.joined(separator: ", ")
         }
     }
 }
