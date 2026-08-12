@@ -87,7 +87,7 @@ class CSVImporter {
                 location: location,
                 notes: notes
             )
-            try service.createApplication(&app)
+            try service.createApplication(&app, skipLedger: true)
         }
     }
     

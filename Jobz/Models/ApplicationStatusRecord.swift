@@ -18,8 +18,11 @@ struct ApplicationStatusRecord: FetchableRecord, Decodable, Identifiable {
     let applicationId: Int64
     let companyName: String
     let role: String
+    let roleExtraNotes: String?
+    let duration: String?
     let location: String?
     let season: String?
+    let notes: String?
     let numInterviews: Int
     let numOAs: Int
     let appliedAt: Date?
@@ -27,13 +30,20 @@ struct ApplicationStatusRecord: FetchableRecord, Decodable, Identifiable {
     let statusRaw: String
     
     var sortLocation: String { location ?? "" }
+    var sortRoleExtraNotes: String { roleExtraNotes ?? "" }
+    var sortDuration: String { duration ?? "" }
+    var sortSeason: String { season ?? "" }
+    var sortNotes: String { notes ?? "" }
     
     enum CodingKeys: String, CodingKey {
         case applicationId = "application_id"
         case companyName = "company_name"
         case role
+        case roleExtraNotes = "role_extra_notes"
+        case duration
         case location
         case season
+        case notes
         case numInterviews
         case numOAs
         case appliedAt

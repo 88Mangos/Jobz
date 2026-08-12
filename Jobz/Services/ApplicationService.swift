@@ -8,10 +8,11 @@ class ApplicationService {
         self.dbQueue = dbQueue
     }
     
-    func createApplication(_ application: inout JobApplication, initialEventDate: Date = Date()) throws {
+    func createApplication(_ application: inout JobApplication, initialEventDate: Date = Date(), skipLedger: Bool = false) throws {
         try dbQueue.write { db in
             try application.insert(db)
             
+            guard !skipLedger else { return }
             guard let appId = application.id else { return }
             
             var initialLedger = LedgerEntry(

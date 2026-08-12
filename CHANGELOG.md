@@ -14,7 +14,13 @@
 - **Strict CSV Validation**: `CSVImporter` now intelligently maps headers by name (agnostic to column order) and handles case-insensitivity, BOMs, and quotes. It gracefully ignores extraneous columns while strictly validating required ones.
 - **CSV Error Reporting**: Attempting to upload a malformed CSV will now halt the process and present a native UI alert detailing the exact matched, missing, and extraneous column headers.
 - **Chart Customization Guide**: Generated `CustomizingCharts.md` to document how to override Swift Chart colors for personalization.
+- **Raw Database Spreadsheet Mode**: Updated Applications and Ledger grids to display raw CSV schema column names (`application_id`, `company_name`, `role_extra_notes`, `duration`, `created_at`, etc.).
+- **Rich Inline Spreadsheet Editors**: Added inline `DatePicker` for `created_at`, dropdown `Picker` for `duration` and `type`, and editable text fields for optional notes and raw foreign key `application_id`.
+- **Restored Ledger Quick-Add**: Added a dedicated quick-add bar to the bottom of the Global Ledger tab for rapid entry using raw `application_id` values.
+- **Table Column Sorting**: Added native column header click sorting for both spreadsheet views.
 
 ### Fixed
 - **Missing Application Bug**: Fixed a GRDB decoding error where applications with zero ledger events were not displayed. Added `CodingKeys` to `ApplicationStatusRecord` to properly map `snake_case` SQL columns, and made `lastUpdated` optional.
 - **Navigation Back Stack**: Wrapped the detail view inside `ContentView` in a `NavigationStack` so that pushing to the `ApplicationDetailView` correctly provides a "< Back" button.
+- **Applications Over Time Chart Grouping**: Refactored `ApplicationsOverTimeChart` to aggregate applications by week starting on Sunday rather than by hour/day.
+- **CSV Import Ledger Creation**: Updated CSV import to skip auto-generating "Applied" ledger entries so imports act strictly as manual data overrides.

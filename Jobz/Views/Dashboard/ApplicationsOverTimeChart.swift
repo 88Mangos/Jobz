@@ -4,13 +4,15 @@ import Charts
 struct ApplicationsOverTimeChart: View {
     let records: [ApplicationStatusRecord]
     
-    // Group applications by week/day
+    // Group applications by week starting on Sunday
     var timeData: [(date: Date, count: Int)] {
         let validRecords = records.compactMap { $0.appliedAt }
-        let calendar = Calendar.current
+        var calendar = Calendar.current
+        calendar.firstWeekday = 1 // 1 is Sunday
         
         let grouped = Dictionary(grouping: validRecords) { date in
-            calendar.startOfDay(for: date)
+            let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+            return calendar.date(from: components) ?? calendar.startOfDay(for: date)
         }
         
         return grouped.map { (date: $0.key, count: $0.value.count) }
@@ -24,13 +26,13 @@ struct ApplicationsOverTimeChart: View {
             
             Chart(timeData, id: \.date) { item in
                 LineMark(
-                    x: .value("Date", item.date, unit: .day),
+                    x: .value("Date", item.date, unit: .weekOfYear),
                     y: .value("Applications", item.count)
                 )
                 .interpolationMethod(.monotone)
                 
                 AreaMark(
-                    x: .value("Date", item.date, unit: .day),
+                    x: .value("Date", item.date, unit: .weekOfYear),
                     y: .value("Applications", item.count)
                 )
                 .foregroundStyle(.blue.opacity(0.1))

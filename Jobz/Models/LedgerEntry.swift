@@ -21,7 +21,7 @@ struct LedgerEntry: Codable, FetchableRecord, MutablePersistableRecord, Identifi
     var update: String?
     
     var sortUpdate: String { update ?? "" }
-
+    var sortId: Int64 { id ?? 0 }
     static let databaseTableName = "ledger"
 
     enum CodingKeys: String, CodingKey {

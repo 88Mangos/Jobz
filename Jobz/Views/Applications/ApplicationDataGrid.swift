@@ -29,26 +29,58 @@ struct ApplicationDataGrid: View {
     var body: some View {
         VStack(spacing: 0) {
             Table(sortedApplications, selection: $selection, sortOrder: $sortOrder) {
-                TableColumn("Company", value: \.companyName) { app in
+                TableColumn("application_id", value: \.applicationId) { app in
+                    Text("\(app.applicationId)")
+                }
+                TableColumn("company_name", value: \.companyName) { app in
                     TextField("Company", text: Binding(
                         get: { app.companyName },
                         set: { newValue in updateApplication(app, newCompanyName: newValue) }
                     ))
                 }
-                TableColumn("Role", value: \.role) { app in
+                TableColumn("role", value: \.role) { app in
                     TextField("Role", text: Binding(
                         get: { app.role },
                         set: { newValue in updateApplication(app, newRole: newValue) }
                     ))
                 }
-                TableColumn("Location", value: \.sortLocation) { app in
+                TableColumn("role_extra_notes", value: \.sortRoleExtraNotes) { app in
+                    TextField("Role Notes", text: Binding(
+                        get: { app.roleExtraNotes ?? "" },
+                        set: { newValue in updateApplication(app, newRoleExtraNotes: newValue) }
+                    ))
+                }
+                TableColumn("duration", value: \.sortDuration) { app in
+                    Picker("", selection: Binding(
+                        get: { app.duration ?? "" },
+                        set: { newValue in updateApplication(app, newDuration: newValue) }
+                    )) {
+                        Text("").tag("")
+                        Text("Full-time").tag("Full-time")
+                        Text("Part-time").tag("Part-time")
+                        Text("Internship").tag("Internship")
+                        Text("Contract").tag("Contract")
+                        Text("Co-op").tag("Co-op")
+                    }
+                    .labelsHidden()
+                }
+                TableColumn("season", value: \.sortSeason) { app in
+                    TextField("Season", text: Binding(
+                        get: { app.season ?? "" },
+                        set: { newValue in updateApplication(app, newSeason: newValue) }
+                    ))
+                }
+                TableColumn("location", value: \.sortLocation) { app in
                     TextField("Location", text: Binding(
                         get: { app.location ?? "" },
                         set: { newValue in updateApplication(app, newLocation: newValue) }
                     ))
                 }
-                TableColumn("Status", value: \.statusRaw) { app in
-                    StatusBadgeView(status: app.status)
+                TableColumn("notes", value: \.sortNotes) { app in
+                    TextField("Notes", text: Binding(
+                        get: { app.notes ?? "" },
+                        set: { newValue in updateApplication(app, newNotes: newValue) }
+                    ))
                 }
             }
             
@@ -119,13 +151,17 @@ struct ApplicationDataGrid: View {
         }
     }
     
-    private func updateApplication(_ record: ApplicationStatusRecord, newCompanyName: String? = nil, newRole: String? = nil, newLocation: String? = nil) {
+    private func updateApplication(_ record: ApplicationStatusRecord, newCompanyName: String? = nil, newRole: String? = nil, newRoleExtraNotes: String? = nil, newDuration: String? = nil, newSeason: String? = nil, newLocation: String? = nil, newNotes: String? = nil) {
         do {
             guard var app = try applicationService.fetchApplication(id: record.applicationId) else { return }
             
             if let company = newCompanyName { app.companyName = company }
             if let role = newRole { app.role = role }
             if let location = newLocation { app.location = location }
+            if let roleExtraNotes = newRoleExtraNotes { app.roleExtraNotes = roleExtraNotes }
+            if let duration = newDuration { app.duration = duration }
+            if let season = newSeason { app.season = season }
+            if let notes = newNotes { app.notes = notes }
             
             try applicationService.dbQueue.write { db in
                 try app.update(db)
