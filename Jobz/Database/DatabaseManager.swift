@@ -13,7 +13,14 @@ public class DatabaseManager {
             let directoryURL = appSupportURL.appendingPathComponent("Jobz", isDirectory: true)
             try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
             
-            let databaseURL = directoryURL.appendingPathComponent("Jobz.sqlite")
+            let useTestDB = ProcessInfo.processInfo.arguments.contains("-useTestDB") || ProcessInfo.processInfo.environment["USE_TEST_DB"] == "1"
+            let dbName = useTestDB ? "Jobz_Test.sqlite" : "Jobz.sqlite"
+            
+            if useTestDB {
+                os_log("Using TEST database: %{public}@", dbName)
+            }
+            
+            let databaseURL = directoryURL.appendingPathComponent(dbName)
             dbQueue = try DatabaseQueue(path: databaseURL.path)
             
             try AppDatabase.setupMigrations(dbQueue)

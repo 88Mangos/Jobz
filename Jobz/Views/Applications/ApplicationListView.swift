@@ -5,21 +5,41 @@ struct ApplicationListView: View {
     @State private var showingNewApplicationForm = false
     private let applicationService = ApplicationService()
     
+    enum ViewMode {
+        case list
+        case spreadsheet
+    }
+    
+    @State private var viewMode: ViewMode = .list
+    
     var body: some View {
-        List(applications) { app in
-            NavigationLink(destination: ApplicationDetailView(applicationId: app.applicationId)) {
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(app.companyName)
-                            .font(.headline)
-                        Text(app.role)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+        VStack(spacing: 0) {
+            Picker("View Mode", selection: $viewMode) {
+                Text("List").tag(ViewMode.list)
+                Text("Spreadsheet").tag(ViewMode.spreadsheet)
+            }
+            .pickerStyle(.segmented)
+            .padding()
+            
+            if viewMode == .list {
+                List(applications) { app in
+                    NavigationLink(destination: ApplicationDetailView(applicationId: app.applicationId)) {
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(app.companyName)
+                                    .font(.headline)
+                                Text(app.role)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            StatusBadgeView(status: app.status)
+                        }
+                        .padding(.vertical, 4)
                     }
-                    Spacer()
-                    StatusBadgeView(status: app.status)
                 }
-                .padding(.vertical, 4)
+            } else {
+                ApplicationDataGrid(applications: $applications, onRefresh: loadApplications)
             }
         }
         .navigationTitle("Applications")

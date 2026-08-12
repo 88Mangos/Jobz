@@ -49,4 +49,10 @@ class ApplicationService {
                 .fetchAll(db)
         }
     }
+    
+    func fetchAllLedgerEntries() throws -> [LedgerEntry] {
+        try dbQueue.read { db in
+            try LedgerEntry.order(Column("created_at").desc).fetchAll(db)
+        }
+    }
 }

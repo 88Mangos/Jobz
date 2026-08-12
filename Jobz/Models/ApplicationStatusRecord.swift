@@ -23,8 +23,21 @@ struct ApplicationStatusRecord: FetchableRecord, Decodable, Identifiable {
     let numInterviews: Int
     let numOAs: Int
     let appliedAt: Date?
-    let lastUpdated: Date
+    let lastUpdated: Date?
     let statusRaw: String
+    
+    enum CodingKeys: String, CodingKey {
+        case applicationId = "application_id"
+        case companyName = "company_name"
+        case role
+        case location
+        case season
+        case numInterviews
+        case numOAs
+        case appliedAt
+        case lastUpdated
+        case statusRaw
+    }
     
     var status: ApplicationStatus {
         ApplicationStatus(rawValue: statusRaw) ?? .pending

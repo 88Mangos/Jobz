@@ -31,3 +31,22 @@ From Status View - breakdown of all applications (unique application id) by acce
 From Status View - using applied_at timestamp, line chart showing num applications over time 
 
 From Status View - using applied_at timestamp, donut showing progress towards goal num applications per week 
+
+**CSV Import & Data Ingestion:**
+1. **User Interface**: File menu option or button in navigation sidebar (`Import Data...`) presenting a modal/file picker (`NSOpenPanel`) to select `applications.csv` and `ledger.csv`.
+2. **Application CSV Expected Headers**:
+   - `application_id` (optional, used for mapping to ledger if present)
+   - `company_name` (required)
+   - `role` (required)
+   - `role_extra_notes`, `duration`, `season`, `location`, `notes` (optional)
+3. **Ledger CSV Expected Headers**:
+   - `ledger_id` (optional)
+   - `created_at` (required - e.g. `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
+   - `type` (required - `Applied`, `Online Assessment`, `Interview`, `Update`, `Offer`, `Rejection`, `Accepted`)
+   - `application_id` (required - maps to application)
+   - `update` (optional notes)
+4. **Import Behavior**:
+   - Process `applications.csv` first, inserting records into `application` table (maintaining ID mapping if auto-incrementing).
+   - Process `ledger.csv` second, linking entries to the corresponding `application_id`.
+   - Execute all insertions inside a single database transaction for atomic safety.
+ 
