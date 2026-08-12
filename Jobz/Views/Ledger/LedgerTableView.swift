@@ -22,6 +22,7 @@ struct LedgerTableView: View {
     @State private var newLedgerAppId = ""
     @State private var newLedgerType: EventType = .applied
     @State private var newLedgerNotes = ""
+    @State private var newLedgerCreatedAt = Date()
     
     var filteredAndSortedEntries: [LedgerEntry] {
         var result = entries
@@ -70,11 +71,16 @@ struct LedgerTableView: View {
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 80)
                     
+                    
                     Text(Int64(newLedgerAppId) != nil ? appDetails(for: Int64(newLedgerAppId)!) : "Enter valid ID")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .frame(width: 180, alignment: .leading)
                         .lineLimit(1)
+                        
+                    DatePicker("", selection: $newLedgerCreatedAt, displayedComponents: [.date, .hourAndMinute])
+                        .labelsHidden()
+                        
                     Picker("Type", selection: $newLedgerType) {
                         ForEach(EventType.allCases) { type in
                             Text(type.rawValue).tag(type)
@@ -230,7 +236,7 @@ struct LedgerTableView: View {
     private func addLedgerEntry() {
         guard let appId = Int64(newLedgerAppId) else { return }
         var newEntry = LedgerEntry(
-            createdAt: Date(),
+            createdAt: newLedgerCreatedAt,
             type: newLedgerType,
             applicationId: appId,
             update: newLedgerNotes.isEmpty ? nil : newLedgerNotes
@@ -240,6 +246,7 @@ struct LedgerTableView: View {
             newLedgerAppId = ""
             newLedgerType = .applied
             newLedgerNotes = ""
+            newLedgerCreatedAt = Date()
             loadData()
         } catch {
             print("Error adding ledger entry: \(error)")
