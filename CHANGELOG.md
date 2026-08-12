@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- **Role Name Expansion**: The `SummaryDetailView` now expands standard tech role abbreviations (e.g., SWE to Software Engineer). Any extra role notes are cleanly formatted on a new line beneath the primary role title.
 - **Summary Tab**: Added a new Summary tab featuring a read-only spreadsheet view (`SummaryTableView`) of the `application_status_view` with derived pipeline metrics (applied at, last updated, interview counts).
 - **Detail Timeline View**: Selecting an application in the Summary tab now opens a detailed split-view (`SummaryDetailView`) displaying the application's timeline of events.
 - **Strict Read-Only Spreadsheet Views**: Deprecated the card-based ApplicationListView in favor of a new `ApplicationTableView`. Removed inline editing from the Applications and Ledger spreadsheets to enforce a strict read-only tabular presentation of the raw data.

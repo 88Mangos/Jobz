@@ -16,9 +16,17 @@ struct SummaryDetailView: View {
                         Text(app.companyName)
                             .font(.largeTitle)
                             .bold()
-                        Text(app.role)
-                            .font(.title2)
-                            .foregroundColor(.secondary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(expandedRole(for: app))
+                                .font(.title2)
+                                .foregroundColor(.secondary)
+                            
+                            if let notes = app.roleExtraNotes, !notes.isEmpty {
+                                Text(notes)
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                         
                         if let loc = app.location, !loc.isEmpty {
                             Text(loc)
@@ -91,5 +99,32 @@ struct SummaryDetailView: View {
         } catch {
             print("Error loading data: \(error)")
         }
+    }
+    
+    private func expandedRole(for app: JobApplication) -> String {
+        let role = app.role.trimmingCharacters(in: .whitespacesAndNewlines)
+        let upperRole = role.uppercased()
+        
+        if upperRole == "OTHER" {
+            return "Other"
+        }
+        
+        let expansion: String?
+        switch upperRole {
+        case "MLE": expansion = "Machine Learning Engineer"
+        case "AIE": expansion = "AI Engineer"
+        case "SWE": expansion = "Software Engineer"
+        case "IT": expansion = "Information Technology"
+        case "DS": expansion = "Data Science"
+        case "QT": expansion = "Quant Trader"
+        case "QR": expansion = "Quant Researcher"
+        default: expansion = nil
+        }
+        
+        if let expansion = expansion {
+            return "\(role) - \(expansion)"
+        }
+        
+        return role
     }
 }
