@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- **Timezone Support**: Added a `timezone` field to the `Ledger` schema via a new migration. Introduced dynamic, location-aware GMT labels (e.g., `GMT-04:00 (EDT) - New York`) in the Add Update form and Ledger table. Timezones default automatically to the user's current location and correctly offset UTC timestamps in exports based on historical daylight saving rules.
 - **Ledger Inline Application Details**: Replaced the standalone App ID column in the Ledger grid with an integrated "Application" column that prominently displays both the numeric ID and a dynamically resolved caption of the company name and role (e.g., `123`, `Google - SWE`). This same real-time validation is surfaced in the Quick-Add row to streamline manual data entry.
 - **CSV Export**: Added native CSV export support to Applications, Ledger, Summary, and SQL Lab views using `NSSavePanel`. Ensures standard CSV compliance (escaping quotes, commas, and newlines) and automatically generates ISO-8601 UTC timestamped filenames (e.g., `Applications_20260812T151046Z.csv`).
 - **Sandbox Entitlements**: Added the `Jobz.entitlements` file with `com.apple.security.files.user-selected.read-write` and updated project settings to securely enable `NSSavePanel` in the macOS App Sandbox without `EXC_BREAKPOINT` runtime crashes.

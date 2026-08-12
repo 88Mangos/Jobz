@@ -215,6 +215,7 @@ class CSVImporter {
         let cIdx = actualHeaders.firstIndex(of: "created_at")!
         let tIdx = actualHeaders.firstIndex(of: "type")!
         let uIdx = actualHeaders.firstIndex(of: "update")!
+        let tzIdx = actualHeaders.firstIndex(of: "timezone")
         
         for i in 1..<rows.count {
             let cols = parseCSVRow(rows[i])
@@ -227,12 +228,17 @@ class CSVImporter {
             
             let date = parseDate(dateStr)
             let type = EventType(rawValue: typeStr) ?? .update
+            var timezoneStr: String? = nil
+            if let tzIdx = tzIdx, tzIdx < cols.count {
+                timezoneStr = cols[tzIdx].isEmpty ? nil : cols[tzIdx]
+            }
             
             var entry = LedgerEntry(
                 createdAt: date,
                 type: type,
                 applicationId: appId,
-                update: updateStr
+                update: updateStr,
+                timezone: timezoneStr
             )
             try service.addLedgerEntry(&entry)
         }

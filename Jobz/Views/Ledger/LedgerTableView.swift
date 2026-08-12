@@ -23,6 +23,20 @@ struct LedgerTableView: View {
     @State private var newLedgerType: EventType = .applied
     @State private var newLedgerNotes = ""
     @State private var newLedgerCreatedAt = Date()
+    @State private var newLedgerTimezone: String = {
+        let currentId = TimeZone.current.identifier
+        let supported = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC"]
+        return supported.contains(currentId) ? currentId : "America/New_York"
+    }()
+    
+    private var supportedTimezones: [String] {
+        var zones = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC"]
+        let current = TimeZone.current.identifier
+        if !zones.contains(current) {
+            zones.insert(current, at: 0)
+        }
+        return zones
+    }
     
     var filteredAndSortedEntries: [LedgerEntry] {
         var result = entries
@@ -81,6 +95,13 @@ struct LedgerTableView: View {
                     DatePicker("", selection: $newLedgerCreatedAt, displayedComponents: [.date, .hourAndMinute])
                         .labelsHidden()
                         
+                    Picker("Timezone", selection: $newLedgerTimezone) {
+                        ForEach(supportedTimezones, id: \.self) { tzId in
+                            Text(TimeZone.formattedLabel(for: tzId, date: newLedgerCreatedAt)).tag(tzId)
+                        }
+                    }
+                    .labelsHidden()
+                        
                     Picker("Type", selection: $newLedgerType) {
                         ForEach(EventType.allCases) { type in
                             Text(type.rawValue).tag(type)
@@ -101,6 +122,7 @@ struct LedgerTableView: View {
                 TableColumn("ID", value: \.sortId) { entry in
                     Text("\(entry.id ?? 0)")
                 }
+                .width(min: 30, max: 50)
                 TableColumn("Created At", value: \.createdAt) { entry in
                     if isEditing {
                         DatePicker("", selection: Binding(
@@ -114,6 +136,27 @@ struct LedgerTableView: View {
                         Text(entry.createdAt, style: .time)
                     }
                 }
+                .width(min: 150, ideal: 180, max: 250)
+                TableColumn("Timezone") { entry in
+                    if isEditing {
+                        Picker("", selection: Binding(
+                            get: { entry.timezone ?? "America/New_York" },
+                            set: { newValue in updateEntry(entry, newTimezone: newValue) }
+                        )) {
+                            ForEach(supportedTimezones, id: \.self) { tzId in
+                                Text(TimeZone.formattedLabel(for: tzId, date: entry.createdAt)).tag(tzId)
+                            }
+                        }
+                        .labelsHidden()
+                    } else {
+                        if let tzId = entry.timezone {
+                            Text(TimeZone.formattedLabel(for: tzId, date: entry.createdAt))
+                        } else {
+                            Text("")
+                        }
+                    }
+                }
+                .width(min: 220, ideal: 250, max: 300)
                 TableColumn("Type", value: \.type.rawValue) { entry in
                     if isEditing {
                         Picker("", selection: Binding(
@@ -129,6 +172,7 @@ struct LedgerTableView: View {
                         Text(entry.type.rawValue)
                     }
                 }
+                .width(min: 120, max: 150)
                 TableColumn("Application", value: \.applicationId) { entry in
                     if isEditing {
                         VStack(alignment: .leading, spacing: 2) {
@@ -151,6 +195,7 @@ struct LedgerTableView: View {
                         }
                     }
                 }
+                .width(min: 150, ideal: 200, max: 250)
                 TableColumn("Notes", value: \.sortUpdate) { entry in
                     if isEditing {
                         TextField("Notes", text: Binding(
@@ -239,7 +284,8 @@ struct LedgerTableView: View {
             createdAt: newLedgerCreatedAt,
             type: newLedgerType,
             applicationId: appId,
-            update: newLedgerNotes.isEmpty ? nil : newLedgerNotes
+            update: newLedgerNotes.isEmpty ? nil : newLedgerNotes,
+            timezone: newLedgerTimezone
         )
         do {
             try applicationService.addLedgerEntry(&newEntry)
@@ -247,19 +293,25 @@ struct LedgerTableView: View {
             newLedgerType = .applied
             newLedgerNotes = ""
             newLedgerCreatedAt = Date()
+            newLedgerTimezone = {
+                let currentId = TimeZone.current.identifier
+                let supported = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC"]
+                return supported.contains(currentId) ? currentId : "America/New_York"
+            }()
             loadData()
         } catch {
             print("Error adding ledger entry: \(error)")
         }
     }
     
-    private func updateEntry(_ entry: LedgerEntry, newType: EventType? = nil, newUpdate: String? = nil, newCreatedAt: Date? = nil, newApplicationId: Int64? = nil) {
+    private func updateEntry(_ entry: LedgerEntry, newType: EventType? = nil, newUpdate: String? = nil, newCreatedAt: Date? = nil, newApplicationId: Int64? = nil, newTimezone: String? = nil) {
         do {
             var updatedEntry = entry
             if let type = newType { updatedEntry.type = type }
             if let update = newUpdate { updatedEntry.update = update.isEmpty ? nil : update }
             if let createdAt = newCreatedAt { updatedEntry.createdAt = createdAt }
             if let applicationId = newApplicationId { updatedEntry.applicationId = applicationId }
+            if let timezone = newTimezone { updatedEntry.timezone = timezone }
             
             try applicationService.dbQueue.write { db in
                 try updatedEntry.update(db)
@@ -306,7 +358,7 @@ struct LedgerTableView: View {
     }
     
     private func exportCSV() {
-        let headers = ["ledger_id", "created_at", "type", "application_id", "update"]
+        let headers = ["ledger_id", "created_at", "type", "application_id", "update", "timezone"]
         
         let formatter = ISO8601DateFormatter()
         let rows = filteredAndSortedEntries.map { entry in
@@ -315,7 +367,8 @@ struct LedgerTableView: View {
                 formatter.string(from: entry.createdAt),
                 entry.type.rawValue,
                 String(entry.applicationId),
-                entry.update ?? ""
+                entry.update ?? "",
+                entry.timezone ?? ""
             ]
         }
         

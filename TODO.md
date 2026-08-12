@@ -16,4 +16,4 @@
 - [ ] actually fill it with my data 
 
 # Future Extensions Up For Debate
-- [ ] Do I need to leave timezone stuff? like when adding new entries automatically grab the current timezone and convert to underlying UTC time? It would be a pain in the ass to backfill though, and frankly it's not important enough for me to GAF.
+- [x] Do I need to leave timezone stuff? like when adding new entries automatically grab the current timezone and convert to underlying UTC time? It would be a pain in the ass to backfill though, and frankly it's not important enough for me to GAF.

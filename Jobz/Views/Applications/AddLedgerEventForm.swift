@@ -8,6 +8,20 @@ struct AddLedgerEventForm: View {
     @State private var type: EventType = .update
     @State private var date = Date()
     @State private var notes = ""
+    @State private var timezone: String = {
+        let currentId = TimeZone.current.identifier
+        let supported = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC"]
+        return supported.contains(currentId) ? currentId : "America/New_York"
+    }()
+    
+    private var supportedTimezones: [String] {
+        var zones = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC"]
+        let current = TimeZone.current.identifier
+        if !zones.contains(current) {
+            zones.insert(current, at: 0)
+        }
+        return zones
+    }
     
     private let applicationService = ApplicationService()
     
@@ -20,6 +34,11 @@ struct AddLedgerEventForm: View {
                     }
                 }
                 DatePicker("Date", selection: $date, displayedComponents: .date)
+                Picker("Timezone", selection: $timezone) {
+                    ForEach(supportedTimezones, id: \.self) { tzId in
+                        Text(TimeZone.formattedLabel(for: tzId, date: date)).tag(tzId)
+                    }
+                }
                 TextField("Notes", text: $notes)
             }
             .padding()
@@ -43,7 +62,8 @@ struct AddLedgerEventForm: View {
             createdAt: date,
             type: type,
             applicationId: applicationId,
-            update: notes.isEmpty ? nil : notes
+            update: notes.isEmpty ? nil : notes,
+            timezone: timezone
         )
         do {
             try applicationService.addLedgerEntry(&entry)

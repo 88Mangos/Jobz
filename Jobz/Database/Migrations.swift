@@ -107,6 +107,12 @@ struct AppDatabase {
             """)
         }
         
+        migrator.registerMigration("v3_ledger_timezone") { db in
+            try db.alter(table: "ledger") { t in
+                t.add(column: "timezone", .text)
+            }
+        }
+        
         try migrator.migrate(dbQueue)
     }
 }
