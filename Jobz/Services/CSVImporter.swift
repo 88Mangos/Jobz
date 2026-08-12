@@ -155,10 +155,10 @@ class CSVImporter {
             let cols = parseCSVRow(rows[i])
             guard cols.count >= actualHeaders.count else { continue }
             
-            var duration: String? = cols[dIdx].isEmpty ? nil : cols[dIdx]
-            var season: String? = cols[sIdx].isEmpty ? nil : cols[sIdx]
-            var location: String? = cols[lIdx].isEmpty ? nil : cols[lIdx]
-            var notes: String? = cols[nIdx].isEmpty ? nil : cols[nIdx]
+            let duration: String? = cols[dIdx].isEmpty ? nil : cols[dIdx]
+            let season: String? = cols[sIdx].isEmpty ? nil : cols[sIdx]
+            let location: String? = cols[lIdx].isEmpty ? nil : cols[lIdx]
+            let notes: String? = cols[nIdx].isEmpty ? nil : cols[nIdx]
             var roleExtraNotes: String? = nil
             if let rn = rnIdx, rn < cols.count {
                 roleExtraNotes = cols[rn].isEmpty ? nil : cols[rn]
@@ -224,7 +224,7 @@ class CSVImporter {
             guard let appId = Int64(cols[aIdx]) else { continue }
             let dateStr = cols[cIdx]
             let typeStr = cols[tIdx]
-            var updateStr: String? = cols[uIdx].isEmpty ? nil : cols[uIdx]
+            let updateStr: String? = cols[uIdx].isEmpty ? nil : cols[uIdx]
             
             let date = parseDate(dateStr)
             let type = EventType(rawValue: typeStr) ?? .update

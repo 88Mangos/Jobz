@@ -74,13 +74,13 @@ class ApplicationService {
     }
     
     func deleteApplications(ids: Set<Int64>) throws {
-        try dbQueue.write { db in
+        _ = try dbQueue.write { db in
             try JobApplication.deleteAll(db, keys: Array(ids))
         }
     }
     
     func deleteLedgerEntries(ids: Set<Int64>) throws {
-        try dbQueue.write { db in
+        _ = try dbQueue.write { db in
             try LedgerEntry.deleteAll(db, keys: Array(ids))
         }
     }
