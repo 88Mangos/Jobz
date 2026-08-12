@@ -23,35 +23,44 @@ class CSVImporter {
         defer { url.stopAccessingSecurityScopedResource() }
         
         let content = try String(contentsOf: url, encoding: .utf8)
-        let rows = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
+        let rows = content.components(separatedBy: CharacterSet.newlines).filter { !$0.isEmpty }
         
         guard rows.count > 0 else { return }
         
-        // Validation
         let expectedHeaders = Set(["company_name", "role", "duration", "season", "location", "notes"])
-        let actualHeaders = rows[0].components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        let actualHeaders = rows[0].components(separatedBy: ",").map { 
+            $0.replacingOccurrences(of: "\"", with: "")
+              .trimmingCharacters(in: .whitespacesAndNewlines)
+              .trimmingCharacters(in: .init(charactersIn: "\u{FEFF}"))
+              .lowercased()
+        }
         let actualHeaderSet = Set(actualHeaders)
         
         let matched = expectedHeaders.intersection(actualHeaderSet)
         let missing = expectedHeaders.subtracting(actualHeaderSet)
         let extraneous = actualHeaderSet.subtracting(expectedHeaders)
         
-        if !missing.isEmpty || !extraneous.isEmpty {
+        if !missing.isEmpty {
             throw CSVError.validationFailed(matched: Array(matched), missing: Array(missing), extraneous: Array(extraneous))
         }
         
         guard rows.count > 1 else { return }
         
         // Find indices
+        let aIdx = actualHeaders.firstIndex(of: "application_id")
         let cIdx = actualHeaders.firstIndex(of: "company_name")!
         let rIdx = actualHeaders.firstIndex(of: "role")!
+        let rnIdx = actualHeaders.firstIndex(of: "role_extra_notes")
         let dIdx = actualHeaders.firstIndex(of: "duration")!
         let sIdx = actualHeaders.firstIndex(of: "season")!
         let lIdx = actualHeaders.firstIndex(of: "location")!
         let nIdx = actualHeaders.firstIndex(of: "notes")!
         
         for i in 1..<rows.count {
-            let cols = rows[i].components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            let cols = rows[i].components(separatedBy: ",").map { 
+                $0.replacingOccurrences(of: "\"", with: "")
+                  .trimmingCharacters(in: .whitespacesAndNewlines) 
+            }
             // Ensure we have enough columns to access the max index safely, though components will usually match header count
             guard cols.count == actualHeaders.count else { continue }
             
@@ -59,10 +68,20 @@ class CSVImporter {
             var season: String? = cols[sIdx].isEmpty ? nil : cols[sIdx]
             var location: String? = cols[lIdx].isEmpty ? nil : cols[lIdx]
             var notes: String? = cols[nIdx].isEmpty ? nil : cols[nIdx]
+            var roleExtraNotes: String? = nil
+            if let rn = rnIdx {
+                roleExtraNotes = cols[rn].isEmpty ? nil : cols[rn]
+            }
+            var appId: Int64? = nil
+            if let a = aIdx, let parsedId = Int64(cols[a]) {
+                appId = parsedId
+            }
             
             var app = JobApplication(
+                id: appId,
                 companyName: cols[cIdx],
                 role: cols[rIdx],
+                roleExtraNotes: roleExtraNotes,
                 duration: duration,
                 season: season,
                 location: location,
@@ -79,20 +98,25 @@ class CSVImporter {
         defer { url.stopAccessingSecurityScopedResource() }
         
         let content = try String(contentsOf: url, encoding: .utf8)
-        let rows = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
+        let rows = content.components(separatedBy: CharacterSet.newlines).filter { !$0.isEmpty }
         
         guard rows.count > 0 else { return }
         
         // Validation
         let expectedHeaders = Set(["application_id", "created_at", "type", "update"])
-        let actualHeaders = rows[0].components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        let actualHeaders = rows[0].components(separatedBy: ",").map { 
+            $0.replacingOccurrences(of: "\"", with: "")
+              .trimmingCharacters(in: .whitespacesAndNewlines)
+              .trimmingCharacters(in: .init(charactersIn: "\u{FEFF}"))
+              .lowercased()
+        }
         let actualHeaderSet = Set(actualHeaders)
         
         let matched = expectedHeaders.intersection(actualHeaderSet)
         let missing = expectedHeaders.subtracting(actualHeaderSet)
         let extraneous = actualHeaderSet.subtracting(expectedHeaders)
         
-        if !missing.isEmpty || !extraneous.isEmpty {
+        if !missing.isEmpty {
             throw CSVError.validationFailed(matched: Array(matched), missing: Array(missing), extraneous: Array(extraneous))
         }
         
@@ -108,7 +132,10 @@ class CSVImporter {
         fallbackFormatter.dateFormat = "yyyy-MM-dd"
         
         for i in 1..<rows.count {
-            let cols = rows[i].components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            let cols = rows[i].components(separatedBy: ",").map { 
+                $0.replacingOccurrences(of: "\"", with: "")
+                  .trimmingCharacters(in: .whitespacesAndNewlines) 
+            }
             guard cols.count == actualHeaders.count else { continue }
             
             guard let appId = Int64(cols[aIdx]) else { continue }

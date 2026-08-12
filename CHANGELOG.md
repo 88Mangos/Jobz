@@ -11,7 +11,7 @@
 - **Quick-Add Data Entry**: Added an input row at the bottom of both spreadsheet views to rapidly insert new applications and ledger entries.
 - **CSV Importer**: Added a "CSV Import" button to both spreadsheet views, allowing bulk importing of Applications and Ledger events via file selection.
 - **Multi-Select Deletion**: Replaced quick-add rows with a "Delete Selected" button in the main toolbar of both spreadsheet views. Added support for bulk-selecting spreadsheet rows using `Command-click` or `Shift-click`.
-- **Strict CSV Validation**: `CSVImporter` now intelligently maps headers by name (agnostic to column order) and strictly validates required headers.
+- **Strict CSV Validation**: `CSVImporter` now intelligently maps headers by name (agnostic to column order) and handles case-insensitivity, BOMs, and quotes. It gracefully ignores extraneous columns while strictly validating required ones.
 - **CSV Error Reporting**: Attempting to upload a malformed CSV will now halt the process and present a native UI alert detailing the exact matched, missing, and extraneous column headers.
 - **Chart Customization Guide**: Generated `CustomizingCharts.md` to document how to override Swift Chart colors for personalization.
 
