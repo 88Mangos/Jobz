@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- **Ledger Inline Application Details**: Replaced the standalone App ID column in the Ledger grid with an integrated "Application" column that prominently displays both the numeric ID and a dynamically resolved caption of the company name and role (e.g., `123`, `Google - SWE`). This same real-time validation is surfaced in the Quick-Add row to streamline manual data entry.
 - **CSV Export**: Added native CSV export support to Applications, Ledger, Summary, and SQL Lab views using `NSSavePanel`. Ensures standard CSV compliance (escaping quotes, commas, and newlines) and automatically generates ISO-8601 UTC timestamped filenames (e.g., `Applications_20260812T151046Z.csv`).
 - **Sandbox Entitlements**: Added the `Jobz.entitlements` file with `com.apple.security.files.user-selected.read-write` and updated project settings to securely enable `NSSavePanel` in the macOS App Sandbox without `EXC_BREAKPOINT` runtime crashes.
 - **Third-Party License & Attributions**: Added comprehensive open-source licensing and copyright attributions for `GRDB.swift` by Gwendal Roué. Created [`ACKNOWLEDGEMENTS.md`](ACKNOWLEDGEMENTS.md), added root [`LICENSE`](LICENSE), updated [`README.md`](README.md), and introduced an in-app **About & Licenses** SwiftUI view ([`AboutView.swift`](Jobz/Views/About/AboutView.swift)) accessible via sidebar navigation and app menu.

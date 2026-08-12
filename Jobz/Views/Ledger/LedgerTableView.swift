@@ -68,7 +68,13 @@ struct LedgerTableView: View {
                 HStack {
                     TextField("App ID", text: $newLedgerAppId)
                         .textFieldStyle(.roundedBorder)
-                        .frame(width: 100)
+                        .frame(width: 80)
+                    
+                    Text(Int64(newLedgerAppId) != nil ? appDetails(for: Int64(newLedgerAppId)!) : "Enter valid ID")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(width: 180, alignment: .leading)
+                        .lineLimit(1)
                     Picker("Type", selection: $newLedgerType) {
                         ForEach(EventType.allCases) { type in
                             Text(type.rawValue).tag(type)
@@ -117,14 +123,26 @@ struct LedgerTableView: View {
                         Text(entry.type.rawValue)
                     }
                 }
-                TableColumn("App ID", value: \.applicationId) { entry in
+                TableColumn("Application", value: \.applicationId) { entry in
                     if isEditing {
-                        TextField("App ID", value: Binding(
-                            get: { entry.applicationId },
-                            set: { newValue in updateEntry(entry, newApplicationId: newValue) }
-                        ), format: .number)
+                        VStack(alignment: .leading, spacing: 2) {
+                            TextField("App ID", value: Binding(
+                                get: { entry.applicationId },
+                                set: { newValue in updateEntry(entry, newApplicationId: newValue) }
+                            ), format: .number)
+                            Text(appDetails(for: entry.applicationId))
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
                     } else {
-                        Text("\(entry.applicationId)")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(entry.applicationId)")
+                            Text(appDetails(for: entry.applicationId))
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
                     }
                 }
                 TableColumn("Notes", value: \.sortUpdate) { entry in
@@ -247,6 +265,13 @@ struct LedgerTableView: View {
     
     private func appName(for id: Int64) -> String {
         return applications.first { $0.applicationId == id }?.companyName ?? "Unknown"
+    }
+    
+    private func appDetails(for id: Int64) -> String {
+        if let app = applications.first(where: { $0.applicationId == id }) {
+            return "\(app.companyName) - \(app.role)"
+        }
+        return "Unknown Application"
     }
     
     private func deleteSelected() {
