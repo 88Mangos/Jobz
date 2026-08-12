@@ -5,6 +5,7 @@ struct ContentView: View {
     
     enum SidebarItem: Hashable {
         case dashboard
+        case summary
         case applications
         case ledger
     }
@@ -15,8 +16,11 @@ struct ContentView: View {
                 NavigationLink(value: SidebarItem.dashboard) {
                     Label("Dashboard", systemImage: "house")
                 }
+                NavigationLink(value: SidebarItem.summary) {
+                    Label("Summary", systemImage: "chart.bar.doc.horizontal")
+                }
                 NavigationLink(value: SidebarItem.applications) {
-                    Label("Applications", systemImage: "list.bullet")
+                    Label("Applications", systemImage: "tablecells")
                 }
                 NavigationLink(value: SidebarItem.ledger) {
                     Label("Ledger", systemImage: "text.book.closed")
@@ -28,10 +32,12 @@ struct ContentView: View {
                 switch selection {
                 case .dashboard:
                     DashboardView()
+                case .summary:
+                    SummaryTableView()
                 case .applications:
-                    ApplicationListView()
+                    ApplicationTableView()
                 case .ledger:
-                    GlobalLedgerView()
+                    LedgerTableView()
                 case nil:
                     Text("Select an item from the sidebar")
                 }

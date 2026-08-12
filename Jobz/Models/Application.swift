@@ -11,6 +11,13 @@ struct JobApplication: Codable, FetchableRecord, MutablePersistableRecord, Ident
     var location: String?
     var notes: String?
 
+    var sortRoleExtraNotes: String { roleExtraNotes ?? "" }
+    var sortDuration: String { duration ?? "" }
+    var sortSeason: String { season ?? "" }
+    var sortLocation: String { location ?? "" }
+    var sortNotes: String { notes ?? "" }
+    var sortId: Int64 { id ?? 0 }
+
     static let databaseTableName = "application"
 
     enum CodingKeys: String, CodingKey {

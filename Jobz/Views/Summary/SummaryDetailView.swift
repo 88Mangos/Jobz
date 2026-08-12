@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct ApplicationDetailView: View {
+struct SummaryDetailView: View {
     let applicationId: Int64
     @State private var application: JobApplication?
     @State private var ledgerEntries: [LedgerEntry] = []
@@ -75,6 +75,10 @@ struct ApplicationDetailView: View {
         .onAppear {
             loadData()
         }
+        // Force reload if applicationId changes
+        .onChange(of: applicationId) { _, _ in
+            loadData()
+        }
         .sheet(isPresented: $showingAddLedgerForm) {
             AddLedgerEventForm(applicationId: applicationId, onSave: loadData)
         }
@@ -85,7 +89,7 @@ struct ApplicationDetailView: View {
             application = try applicationService.fetchApplication(id: applicationId)
             ledgerEntries = try applicationService.fetchLedgerEntries(for: applicationId)
         } catch {
-            print("Error loading data: \\(error)")
+            print("Error loading data: \(error)")
         }
     }
 }

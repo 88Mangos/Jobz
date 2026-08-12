@@ -37,6 +37,12 @@ class ApplicationService {
         }
     }
     
+    func fetchRawApplications() throws -> [JobApplication] {
+        try dbQueue.read { db in
+            try JobApplication.fetchAll(db)
+        }
+    }
+    
     func fetchApplication(id: Int64) throws -> JobApplication? {
         try dbQueue.read { db in
             try JobApplication.fetchOne(db, key: id)

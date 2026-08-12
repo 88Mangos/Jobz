@@ -3,11 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- **Summary Tab**: Added a new Summary tab featuring a read-only spreadsheet view (`SummaryTableView`) of the `application_status_view` with derived pipeline metrics (applied at, last updated, interview counts).
+- **Detail Timeline View**: Selecting an application in the Summary tab now opens a detailed split-view (`SummaryDetailView`) displaying the application's timeline of events.
+- **Strict Read-Only Spreadsheet Views**: Deprecated the card-based ApplicationListView in favor of a new `ApplicationTableView`. Removed inline editing from the Applications and Ledger spreadsheets to enforce a strict read-only tabular presentation of the raw data.
 - **Test Database Environment**: Added a `-useTestDB` launch argument to switch the app to `Jobz_Test.sqlite`, protecting live data during development and testing.
 - **Ledger Tab**: Introduced a dedicated `GlobalLedgerView` accessible from the sidebar. 
 - **Global Ledger Data Grid**: The Ledger tab features a spreadsheet-like grid displaying all ledger events, with toggles to group and filter events by specific applications.
 - **Application Spreadsheet View**: Added a picker in the Applications tab to toggle between the original card list view and a new `ApplicationDataGrid` spreadsheet view.
-- **Inline Editing**: Both the `ApplicationDataGrid` and `GlobalLedgerView` support clicking into cells to seamlessly edit data (e.g. updating company name, role, event type, or notes) without opening a separate form.
 - **Quick-Add Data Entry**: Added an input row at the bottom of both spreadsheet views to rapidly insert new applications and ledger entries.
 - **CSV Importer**: Added a "CSV Import" button to both spreadsheet views, allowing bulk importing of Applications and Ledger events via file selection.
 - **Multi-Select Deletion**: Replaced quick-add rows with a "Delete Selected" button in the main toolbar of both spreadsheet views. Added support for bulk-selecting spreadsheet rows using `Command-click` or `Shift-click`.

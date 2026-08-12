@@ -34,6 +34,8 @@ struct ApplicationStatusRecord: FetchableRecord, Decodable, Identifiable {
     var sortDuration: String { duration ?? "" }
     var sortSeason: String { season ?? "" }
     var sortNotes: String { notes ?? "" }
+    var sortAppliedAt: Date { appliedAt ?? Date.distantPast }
+    var sortLastUpdated: Date { lastUpdated ?? Date.distantPast }
     
     enum CodingKeys: String, CodingKey {
         case applicationId = "application_id"

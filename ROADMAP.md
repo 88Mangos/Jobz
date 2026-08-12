@@ -78,15 +78,21 @@ Jobz/
 │   │   ├── ApplicationsOverTimeChart.swift
 │   │   └── WeeklyGoalDonutChart.swift
 │   │
+│   ├── Summary/
+│   │   ├── SummaryTableView.swift        # Sortable spreadsheet view of application_status_view
+│   │   └── SummaryDetailView.swift       # Timeline view of application & event history
+│   │
 │   ├── Applications/
-│   │   ├── ApplicationListView.swift # Master list of applications with status badges
-│   │   ├── ApplicationDetailView.swift # Detailed view of application & event history
-│   │   ├── NewApplicationForm.swift  # Modal/Form to create a new application + initial Applied event
-│   │   └── AddLedgerEventForm.swift  # Form to append an event update to an application
+│   │   ├── ApplicationTableView.swift    # Raw read-only spreadsheet view for application table
+│   │   ├── NewApplicationForm.swift      # Modal/Form to create a new application + initial Applied event
+│   │   └── AddLedgerEventForm.swift      # Form to append an event update to an application
+│   │
+│   ├── Ledger/
+│   │   └── LedgerTableView.swift         # Raw read-only spreadsheet view for ledger table
 │   │
 │   └── Components/
-│       ├── StatusBadgeView.swift   # Visual status pill (Color coded for Offered/Interviewing/Ghosted)
-│       └── MetricCardView.swift    # Quick-read summary statistics
+│       ├── StatusBadgeView.swift         # Visual status pill (Color coded for Offered/Interviewing/Ghosted)
+│       └── MetricCardView.swift          # Quick-read summary statistics
 │
 └── Utilities/
     └── Date+Extensions.swift       # Date formatting and week-calculation helpers
@@ -101,7 +107,7 @@ Storage Path: Store the .sqlite file in ~/Library/Application Support/Jobz/Jobz.
 
 Data Concurrency: Wrap all write operations in explicit GRDB transactions (dbQueue.write).
 
-UI Pattern: NavigationSplitView with sidebar navigation for modern macOS layout guidelines.
+UI Pattern: NavigationSplitView with sidebar navigation for modern macOS layout guidelines. Sidebar should contain Dashboard, Summary, Applications, and Ledger tabs. Applications, Ledger, and Summary tabs should feature native macOS sortable `Table` views (spreadsheet style without inline editing).
 
 --- 
 

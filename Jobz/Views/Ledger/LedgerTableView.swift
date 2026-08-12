@@ -2,14 +2,13 @@ import SwiftUI
 import GRDB
 import UniformTypeIdentifiers
 
-struct GlobalLedgerView: View {
+struct LedgerTableView: View {
     @State private var entries: [LedgerEntry] = []
     @State private var applications: [ApplicationStatusRecord] = []
     private let applicationService = ApplicationService()
     
     @State private var selectedApplicationId: Int64? = nil
     @State private var isGrouped = false
-    
     
     @State private var isImporting = false
     @State private var selection = Set<LedgerEntry.ID>()
@@ -18,12 +17,6 @@ struct GlobalLedgerView: View {
     @State private var showCSVError = false
     @State private var showDeleteConfirmation = false
     @State private var sortOrder = [KeyPathComparator(\LedgerEntry.createdAt, order: .reverse)]
-    
-    // Quick Add State
-    @State private var newCreatedAt: Date = Date()
-    @State private var newType: EventType = .applied
-    @State private var newApplicationId: Int64? = nil
-    @State private var newUpdate: String = ""
     
     var filteredAndSortedEntries: [LedgerEntry] {
         var result = entries
@@ -67,44 +60,26 @@ struct GlobalLedgerView: View {
             .padding()
             
             Table(filteredAndSortedEntries, selection: $selection, sortOrder: $sortOrder) {
-                TableColumn("ledger_id", value: \.sortId) { entry in
+                TableColumn("ID", value: \.sortId) { entry in
                     Text("\(entry.id ?? 0)")
                 }
-                TableColumn("created_at", value: \.createdAt) { entry in
-                    DatePicker("", selection: Binding(
-                        get: { entry.createdAt },
-                        set: { newValue in updateEntry(entry, newCreatedAt: newValue) }
-                    ), displayedComponents: [.date, .hourAndMinute])
-                    .labelsHidden()
+                TableColumn("Created At", value: \.createdAt) { entry in
+                    Text(entry.createdAt, style: .date)
+                    + Text(" ") +
+                    Text(entry.createdAt, style: .time)
                 }
-                TableColumn("type", value: \.type.rawValue) { entry in
-                    Picker("", selection: Binding(
-                        get: { entry.type },
-                        set: { newValue in updateEntry(entry, newType: newValue) }
-                    )) {
-                        ForEach(EventType.allCases) { type in
-                            Text(type.rawValue).tag(type)
-                        }
-                    }
-                    .labelsHidden()
+                TableColumn("Type", value: \.type.rawValue) { entry in
+                    Text(entry.type.rawValue)
                 }
-                TableColumn("application_id", value: \.applicationId) { entry in
-                    TextField("App ID", value: Binding(
-                        get: { entry.applicationId },
-                        set: { newValue in updateEntry(entry, newApplicationId: newValue) }
-                    ), format: .number)
+                TableColumn("App ID", value: \.applicationId) { entry in
+                    Text("\(entry.applicationId)")
                 }
-                TableColumn("update", value: \.sortUpdate) { entry in
-                    TextField("Notes", text: Binding(
-                        get: { entry.update ?? "" },
-                        set: { newValue in updateEntry(entry, newUpdate: newValue) }
-                    ))
+                TableColumn("Notes", value: \.sortUpdate) { entry in
+                    Text(entry.update ?? "")
                 }
             }
-            
-    
         }
-        .navigationTitle("Global Ledger")
+        .navigationTitle("Ledger")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: { showDeleteConfirmation = true }) {
@@ -162,43 +137,6 @@ struct GlobalLedgerView: View {
     
     private func appName(for id: Int64) -> String {
         return applications.first { $0.applicationId == id }?.companyName ?? "Unknown"
-    }
-    
-    private func updateEntry(_ entry: LedgerEntry, newType: EventType? = nil, newUpdate: String? = nil, newCreatedAt: Date? = nil, newApplicationId: Int64? = nil) {
-        do {
-            var updatedEntry = entry
-            if let type = newType { updatedEntry.type = type }
-            if let update = newUpdate { updatedEntry.update = update }
-            if let createdAt = newCreatedAt { updatedEntry.createdAt = createdAt }
-            if let appId = newApplicationId { updatedEntry.applicationId = appId }
-            
-            try applicationService.dbQueue.write { db in
-                try updatedEntry.update(db)
-            }
-            loadData()
-        } catch {
-            print("Error updating ledger entry: \(error)")
-        }
-    }
-    
-    private func quickAdd() {
-        guard let appId = newApplicationId else { return }
-        var newEntry = LedgerEntry(
-            createdAt: newCreatedAt,
-            type: newType,
-            applicationId: appId,
-            update: newUpdate.isEmpty ? nil : newUpdate
-        )
-        do {
-            try applicationService.addLedgerEntry(&newEntry)
-            newCreatedAt = Date()
-            newType = .applied
-            newApplicationId = nil
-            newUpdate = ""
-            loadData()
-        } catch {
-            print("Error saving quick add: \(error)")
-        }
     }
     
     private func deleteSelected() {
