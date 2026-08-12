@@ -8,11 +8,7 @@ struct AddLedgerEventForm: View {
     @State private var type: EventType = .update
     @State private var date = Date()
     @State private var notes = ""
-    @State private var timezone: String = {
-        let currentId = TimeZone.current.identifier
-        let supported = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC"]
-        return supported.contains(currentId) ? currentId : "America/New_York"
-    }()
+    @State private var timezone: String? = nil
     
     private var supportedTimezones: [String] {
         var zones = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC"]
@@ -35,8 +31,9 @@ struct AddLedgerEventForm: View {
                 }
                 DatePicker("Date", selection: $date, displayedComponents: [.date, .hourAndMinute])
                 Picker("Timezone", selection: $timezone) {
+                    Text("None").tag(String?.none)
                     ForEach(supportedTimezones, id: \.self) { tzId in
-                        Text(TimeZone.formattedLabel(for: tzId, date: date)).tag(tzId)
+                        Text(TimeZone.formattedLabel(for: tzId, date: date)).tag(String?.some(tzId))
                     }
                 }
                 TextField("Notes", text: $notes)
