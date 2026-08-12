@@ -228,6 +228,12 @@ struct ApplicationTableView: View {
                 .disabled(!isEditing)
                 .labelStyle(.titleAndIcon)
             }
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: { exportCSV() }) {
+                    Label("Export CSV", systemImage: "square.and.arrow.up")
+                }
+                .labelStyle(.titleAndIcon)
+            }
         }
         .onAppear {
             loadApplications()
@@ -336,5 +342,24 @@ struct ApplicationTableView: View {
             csvError = error.localizedDescription
             showCSVError = true
         }
+    }
+    
+    private func exportCSV() {
+        let headers = ["application_id", "company_name", "role", "role_extra_notes", "duration", "season", "location", "notes"]
+        let rows = applications.map { app in
+            [
+                app.id.map(String.init) ?? "",
+                app.companyName,
+                app.role,
+                app.roleExtraNotes ?? "",
+                app.duration ?? "",
+                app.season ?? "",
+                app.location ?? "",
+                app.notes ?? ""
+            ]
+        }
+        let csvString = CSVExporter.generateCSV(headers: headers, rows: rows)
+        let filename = CSVExporter.generateFilename(prefix: "Applications")
+        CSVExporter.exportToFile(csvString: csvString, defaultFilename: filename)
     }
 }

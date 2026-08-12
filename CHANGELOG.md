@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Added
+- **CSV Export**: Added native CSV export support to Applications, Ledger, Summary, and SQL Lab views using `NSSavePanel`. Ensures standard CSV compliance (escaping quotes, commas, and newlines) and automatically generates ISO-8601 UTC timestamped filenames (e.g., `Applications_20260812T151046Z.csv`).
+- **Sandbox Entitlements**: Added the `Jobz.entitlements` file with `com.apple.security.files.user-selected.read-write` and updated project settings to securely enable `NSSavePanel` in the macOS App Sandbox without `EXC_BREAKPOINT` runtime crashes.
 - **Third-Party License & Attributions**: Added comprehensive open-source licensing and copyright attributions for `GRDB.swift` by Gwendal Roué. Created [`ACKNOWLEDGEMENTS.md`](ACKNOWLEDGEMENTS.md), added root [`LICENSE`](LICENSE), updated [`README.md`](README.md), and introduced an in-app **About & Licenses** SwiftUI view ([`AboutView.swift`](Jobz/Views/About/AboutView.swift)) accessible via sidebar navigation and app menu.
 - **Dashboard Chart Layout & Timeline Axes**: Reorganized dashboard chart layout and upgraded `ApplicationsOverTimeChart` with clamped X-axis bounds starting at the initial data date, monthly grid ticks/labels, dashed year divider lines, and centered year headers.
 - **Event-Specific Timeline Colors**: Extended `EventType` with semantic color mappings (e.g., Applied, Interview, Offer, Rejection, Accepted) to visually distinguish timeline event types.

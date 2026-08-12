@@ -30,6 +30,12 @@ struct SQLLabView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     
+                    Button(action: exportCSV) {
+                        Label("Export CSV", systemImage: "square.and.arrow.up")
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(columns.isEmpty || rows.isEmpty)
+                    
                     Spacer()
                     
                     Text("Read-only queries. Results limited to 100 rows.")
@@ -106,6 +112,18 @@ struct SQLLabView: View {
             columns = []
             rows = []
         }
+    }
+    
+    private func exportCSV() {
+        guard !columns.isEmpty, !rows.isEmpty else { return }
+        
+        let csvRows = rows.map { dict in
+            columns.map { col in dict[col] ?? "" }
+        }
+        
+        let csvString = CSVExporter.generateCSV(headers: columns, rows: csvRows)
+        let filename = CSVExporter.generateFilename(prefix: "SQLLab")
+        CSVExporter.exportToFile(csvString: csvString, defaultFilename: filename)
     }
 }
 

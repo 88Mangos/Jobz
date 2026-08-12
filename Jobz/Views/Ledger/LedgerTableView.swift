@@ -162,6 +162,12 @@ struct LedgerTableView: View {
                 .disabled(!isEditing)
                 .labelStyle(.titleAndIcon)
             }
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: { exportCSV() }) {
+                    Label("Export CSV", systemImage: "square.and.arrow.up")
+                }
+                .labelStyle(.titleAndIcon)
+            }
         }
         .onAppear {
             loadData()
@@ -265,5 +271,24 @@ struct LedgerTableView: View {
             csvError = error.localizedDescription
             showCSVError = true
         }
+    }
+    
+    private func exportCSV() {
+        let headers = ["ledger_id", "created_at", "type", "application_id", "update"]
+        
+        let formatter = ISO8601DateFormatter()
+        let rows = filteredAndSortedEntries.map { entry in
+            [
+                entry.id.map(String.init) ?? "",
+                formatter.string(from: entry.createdAt),
+                entry.type.rawValue,
+                String(entry.applicationId),
+                entry.update ?? ""
+            ]
+        }
+        
+        let csvString = CSVExporter.generateCSV(headers: headers, rows: rows)
+        let filename = CSVExporter.generateFilename(prefix: "Ledger")
+        CSVExporter.exportToFile(csvString: csvString, defaultFilename: filename)
     }
 }

@@ -39,6 +39,14 @@ struct SummaryTableView: View {
                 }
             }
             .navigationTitle("Summary")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: { exportCSV() }) {
+                        Label("Export CSV", systemImage: "square.and.arrow.up")
+                    }
+                    .labelStyle(.titleAndIcon)
+                }
+            }
         } detail: {
             if let selectedId = selection {
                 SummaryDetailView(applicationId: selectedId)
@@ -58,5 +66,32 @@ struct SummaryTableView: View {
         } catch {
             print("Error loading applications: \(error)")
         }
+    }
+    
+    private func exportCSV() {
+        let headers = ["application_id", "company_name", "role", "role_extra_notes", "duration", "location", "season", "notes", "num_interviews", "num_oas", "applied_at", "last_updated", "status"]
+        
+        let formatter = ISO8601DateFormatter()
+        let rows = applications.map { app in
+            [
+                String(app.applicationId),
+                app.companyName,
+                app.role,
+                app.roleExtraNotes ?? "",
+                app.duration ?? "",
+                app.location ?? "",
+                app.season ?? "",
+                app.notes ?? "",
+                String(app.numInterviews),
+                String(app.numOAs),
+                app.appliedAt.map { formatter.string(from: $0) } ?? "",
+                app.lastUpdated.map { formatter.string(from: $0) } ?? "",
+                app.statusRaw
+            ]
+        }
+        
+        let csvString = CSVExporter.generateCSV(headers: headers, rows: rows)
+        let filename = CSVExporter.generateFilename(prefix: "Summary")
+        CSVExporter.exportToFile(csvString: csvString, defaultFilename: filename)
     }
 }
