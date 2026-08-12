@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- **Spreadsheet Edit Mode**: Added an "Edit Mode" toggle to the toolbar in the Applications and Ledger spreadsheet views. When disabled, the tables render as read-only text for significantly improved scrolling performance. When enabled, the tables use `TextField`, `Picker`, and `DatePicker` bindings to allow inline data entry.
 - **Role Name Expansion**: The `SummaryDetailView` now expands standard tech role abbreviations (e.g., SWE to Software Engineer). Any extra role notes are cleanly formatted on a new line beneath the primary role title.
 - **Summary Tab**: Added a new Summary tab featuring a read-only spreadsheet view (`SummaryTableView`) of the `application_status_view` with derived pipeline metrics (applied at, last updated, interview counts).
 - **Detail Timeline View**: Selecting an application in the Summary tab now opens a detailed split-view (`SummaryDetailView`) displaying the application's timeline of events.

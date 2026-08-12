@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import GRDB
 
 struct ApplicationTableView: View {
     @State private var applications: [JobApplication] = []
@@ -12,6 +13,7 @@ struct ApplicationTableView: View {
     @State private var showCSVError = false
     @State private var showDeleteConfirmation = false
     @State private var sortOrder = [KeyPathComparator(\JobApplication.companyName)]
+    @State private var isEditing = false
     
     var sortedApplications: [JobApplication] {
         applications.sorted(using: sortOrder)
@@ -24,41 +26,106 @@ struct ApplicationTableView: View {
                     Text("\(app.id ?? 0)")
                 }
                 TableColumn("Company", value: \.companyName) { app in
-                    Text(app.companyName)
+                    if isEditing {
+                        TextField("Company", text: Binding(
+                            get: { app.companyName },
+                            set: { newValue in updateApplication(app, newCompanyName: newValue) }
+                        ))
+                    } else {
+                        Text(app.companyName)
+                    }
                 }
                 TableColumn("Role", value: \.role) { app in
-                    Text(app.role)
+                    if isEditing {
+                        TextField("Role", text: Binding(
+                            get: { app.role },
+                            set: { newValue in updateApplication(app, newRole: newValue) }
+                        ))
+                    } else {
+                        Text(app.role)
+                    }
                 }
                 TableColumn("Role Notes", value: \.sortRoleExtraNotes) { app in
-                    Text(app.roleExtraNotes ?? "")
+                    if isEditing {
+                        TextField("Role Notes", text: Binding(
+                            get: { app.roleExtraNotes ?? "" },
+                            set: { newValue in updateApplication(app, newRoleExtraNotes: newValue) }
+                        ))
+                    } else {
+                        Text(app.roleExtraNotes ?? "")
+                    }
                 }
                 TableColumn("Duration", value: \.sortDuration) { app in
-                    Text(app.duration ?? "")
+                    if isEditing {
+                        Picker("", selection: Binding(
+                            get: { app.duration ?? "" },
+                            set: { newValue in updateApplication(app, newDuration: newValue) }
+                        )) {
+                            Text("").tag("")
+                            Text("Full-time").tag("Full-time")
+                            Text("Part-time").tag("Part-time")
+                            Text("Internship").tag("Internship")
+                            Text("Contract").tag("Contract")
+                            Text("Co-op").tag("Co-op")
+                        }
+                        .labelsHidden()
+                    } else {
+                        Text(app.duration ?? "")
+                    }
                 }
                 TableColumn("Season", value: \.sortSeason) { app in
-                    Text(app.season ?? "")
+                    if isEditing {
+                        TextField("Season", text: Binding(
+                            get: { app.season ?? "" },
+                            set: { newValue in updateApplication(app, newSeason: newValue) }
+                        ))
+                    } else {
+                        Text(app.season ?? "")
+                    }
                 }
                 TableColumn("Location", value: \.sortLocation) { app in
-                    Text(app.location ?? "")
+                    if isEditing {
+                        TextField("Location", text: Binding(
+                            get: { app.location ?? "" },
+                            set: { newValue in updateApplication(app, newLocation: newValue) }
+                        ))
+                    } else {
+                        Text(app.location ?? "")
+                    }
                 }
                 TableColumn("Notes", value: \.sortNotes) { app in
-                    Text(app.notes ?? "")
+                    if isEditing {
+                        TextField("Notes", text: Binding(
+                            get: { app.notes ?? "" },
+                            set: { newValue in updateApplication(app, newNotes: newValue) }
+                        ))
+                    } else {
+                        Text(app.notes ?? "")
+                    }
                 }
             }
         }
         .navigationTitle("Applications")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
+                Toggle(isOn: $isEditing) {
+                    Label("Edit Mode: \(isEditing ? "On" : "Off")", systemImage: isEditing ? "pencil.circle.fill" : "pencil.circle")
+                }
+                .toggleStyle(.button)
+                .labelStyle(.titleAndIcon)
+            }
+            ToolbarItem(placement: .primaryAction) {
                 Button(action: { showDeleteConfirmation = true }) {
                     Label("Delete Selected", systemImage: "trash")
                 }
-                .disabled(selection.isEmpty)
+                .disabled(selection.isEmpty || !isEditing)
                 .labelStyle(.titleAndIcon)
             }
             ToolbarItem(placement: .primaryAction) {
                 Button(action: { isImporting = true }) {
                     Label("Import CSV", systemImage: "square.and.arrow.down")
                 }
+                .disabled(!isEditing)
                 .labelStyle(.titleAndIcon)
             }
         }
@@ -98,6 +165,26 @@ struct ApplicationTableView: View {
             applications = try applicationService.fetchRawApplications()
         } catch {
             print("Error loading applications: \(error)")
+        }
+    }
+    
+    private func updateApplication(_ app: JobApplication, newCompanyName: String? = nil, newRole: String? = nil, newRoleExtraNotes: String? = nil, newDuration: String? = nil, newSeason: String? = nil, newLocation: String? = nil, newNotes: String? = nil) {
+        do {
+            var updatedApp = app
+            if let companyName = newCompanyName { updatedApp.companyName = companyName }
+            if let role = newRole { updatedApp.role = role }
+            if let roleExtraNotes = newRoleExtraNotes { updatedApp.roleExtraNotes = roleExtraNotes.isEmpty ? nil : roleExtraNotes }
+            if let duration = newDuration { updatedApp.duration = duration.isEmpty ? nil : duration }
+            if let season = newSeason { updatedApp.season = season.isEmpty ? nil : season }
+            if let location = newLocation { updatedApp.location = location.isEmpty ? nil : location }
+            if let notes = newNotes { updatedApp.notes = notes.isEmpty ? nil : notes }
+            
+            try applicationService.dbQueue.write { db in
+                try updatedApp.update(db)
+            }
+            loadApplications()
+        } catch {
+            print("Error updating application: \(error)")
         }
     }
     

@@ -17,6 +17,7 @@ struct LedgerTableView: View {
     @State private var showCSVError = false
     @State private var showDeleteConfirmation = false
     @State private var sortOrder = [KeyPathComparator(\LedgerEntry.createdAt, order: .reverse)]
+    @State private var isEditing = false
     
     var filteredAndSortedEntries: [LedgerEntry] {
         var result = entries
@@ -64,34 +65,76 @@ struct LedgerTableView: View {
                     Text("\(entry.id ?? 0)")
                 }
                 TableColumn("Created At", value: \.createdAt) { entry in
-                    Text(entry.createdAt, style: .date)
-                    + Text(" ") +
-                    Text(entry.createdAt, style: .time)
+                    if isEditing {
+                        DatePicker("", selection: Binding(
+                            get: { entry.createdAt },
+                            set: { newValue in updateEntry(entry, newCreatedAt: newValue) }
+                        ), displayedComponents: [.date, .hourAndMinute])
+                        .labelsHidden()
+                    } else {
+                        Text(entry.createdAt, style: .date)
+                        + Text(" ") +
+                        Text(entry.createdAt, style: .time)
+                    }
                 }
                 TableColumn("Type", value: \.type.rawValue) { entry in
-                    Text(entry.type.rawValue)
+                    if isEditing {
+                        Picker("", selection: Binding(
+                            get: { entry.type },
+                            set: { newValue in updateEntry(entry, newType: newValue) }
+                        )) {
+                            ForEach(EventType.allCases, id: \.self) { type in
+                                Text(type.rawValue).tag(type)
+                            }
+                        }
+                        .labelsHidden()
+                    } else {
+                        Text(entry.type.rawValue)
+                    }
                 }
                 TableColumn("App ID", value: \.applicationId) { entry in
-                    Text("\(entry.applicationId)")
+                    if isEditing {
+                        TextField("App ID", value: Binding(
+                            get: { entry.applicationId },
+                            set: { newValue in updateEntry(entry, newApplicationId: newValue) }
+                        ), format: .number)
+                    } else {
+                        Text("\(entry.applicationId)")
+                    }
                 }
                 TableColumn("Notes", value: \.sortUpdate) { entry in
-                    Text(entry.update ?? "")
+                    if isEditing {
+                        TextField("Notes", text: Binding(
+                            get: { entry.update ?? "" },
+                            set: { newValue in updateEntry(entry, newUpdate: newValue) }
+                        ))
+                    } else {
+                        Text(entry.update ?? "")
+                    }
                 }
             }
         }
         .navigationTitle("Ledger")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
+                Toggle(isOn: $isEditing) {
+                    Label("Edit Mode: \(isEditing ? "On" : "Off")", systemImage: isEditing ? "pencil.circle.fill" : "pencil.circle")
+                }
+                .toggleStyle(.button)
+                .labelStyle(.titleAndIcon)
+            }
+            ToolbarItem(placement: .primaryAction) {
                 Button(action: { showDeleteConfirmation = true }) {
                     Label("Delete Selected", systemImage: "trash")
                 }
-                .disabled(selection.isEmpty)
+                .disabled(selection.isEmpty || !isEditing)
                 .labelStyle(.titleAndIcon)
             }
             ToolbarItem(placement: .primaryAction) {
                 Button(action: { isImporting = true }) {
                     Label("Import CSV", systemImage: "square.and.arrow.down")
                 }
+                .disabled(!isEditing)
                 .labelStyle(.titleAndIcon)
             }
         }
@@ -132,6 +175,23 @@ struct LedgerTableView: View {
             applications = try applicationService.fetchApplications()
         } catch {
             print("Error loading data: \(error)")
+        }
+    }
+    
+    private func updateEntry(_ entry: LedgerEntry, newType: EventType? = nil, newUpdate: String? = nil, newCreatedAt: Date? = nil, newApplicationId: Int64? = nil) {
+        do {
+            var updatedEntry = entry
+            if let type = newType { updatedEntry.type = type }
+            if let update = newUpdate { updatedEntry.update = update.isEmpty ? nil : update }
+            if let createdAt = newCreatedAt { updatedEntry.createdAt = createdAt }
+            if let applicationId = newApplicationId { updatedEntry.applicationId = applicationId }
+            
+            try applicationService.dbQueue.write { db in
+                try updatedEntry.update(db)
+            }
+            loadData()
+        } catch {
+            print("Error updating entry: \(error)")
         }
     }
     
