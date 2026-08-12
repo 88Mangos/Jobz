@@ -19,6 +19,8 @@ struct LedgerEntry: Codable, FetchableRecord, MutablePersistableRecord, Identifi
     var type: EventType
     var applicationId: Int64
     var update: String?
+    
+    var sortUpdate: String { update ?? "" }
 
     static let databaseTableName = "ledger"
 

@@ -26,6 +26,8 @@ struct ApplicationStatusRecord: FetchableRecord, Decodable, Identifiable {
     let lastUpdated: Date?
     let statusRaw: String
     
+    var sortLocation: String { location ?? "" }
+    
     enum CodingKeys: String, CodingKey {
         case applicationId = "application_id"
         case companyName = "company_name"

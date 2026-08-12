@@ -20,29 +20,34 @@ struct ApplicationDataGrid: View {
     @State private var csvError: String? = nil
     @State private var showCSVError = false
     @State private var showDeleteConfirmation = false
+    @State private var sortOrder = [KeyPathComparator(\ApplicationStatusRecord.companyName)]
+    
+    var sortedApplications: [ApplicationStatusRecord] {
+        applications.sorted(using: sortOrder)
+    }
     
     var body: some View {
         VStack(spacing: 0) {
-            Table(applications, selection: $selection) {
-                TableColumn("Company") { app in
+            Table(sortedApplications, selection: $selection, sortOrder: $sortOrder) {
+                TableColumn("Company", value: \.companyName) { app in
                     TextField("Company", text: Binding(
                         get: { app.companyName },
                         set: { newValue in updateApplication(app, newCompanyName: newValue) }
                     ))
                 }
-                TableColumn("Role") { app in
+                TableColumn("Role", value: \.role) { app in
                     TextField("Role", text: Binding(
                         get: { app.role },
                         set: { newValue in updateApplication(app, newRole: newValue) }
                     ))
                 }
-                TableColumn("Location") { app in
+                TableColumn("Location", value: \.sortLocation) { app in
                     TextField("Location", text: Binding(
                         get: { app.location ?? "" },
                         set: { newValue in updateApplication(app, newLocation: newValue) }
                     ))
                 }
-                TableColumn("Status") { app in
+                TableColumn("Status", value: \.statusRaw) { app in
                     StatusBadgeView(status: app.status)
                 }
             }

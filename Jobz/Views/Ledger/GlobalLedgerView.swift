@@ -24,6 +24,7 @@ struct GlobalLedgerView: View {
     @State private var csvError: String? = nil
     @State private var showCSVError = false
     @State private var showDeleteConfirmation = false
+    @State private var sortOrder = [KeyPathComparator(\LedgerEntry.createdAt, order: .reverse)]
     
     var filteredAndSortedEntries: [LedgerEntry] {
         var result = entries
@@ -40,7 +41,7 @@ struct GlobalLedgerView: View {
                 return $0.applicationId < $1.applicationId
             }
         } else {
-            result.sort { $0.createdAt > $1.createdAt }
+            result.sort(using: sortOrder)
         }
         
         return result
@@ -66,14 +67,14 @@ struct GlobalLedgerView: View {
             }
             .padding()
             
-            Table(filteredAndSortedEntries, selection: $selection) {
+            Table(filteredAndSortedEntries, selection: $selection, sortOrder: $sortOrder) {
                 TableColumn("Application") { entry in
                     Text(appName(for: entry.applicationId))
                 }
-                TableColumn("Date") { entry in
+                TableColumn("Date", value: \.createdAt) { entry in
                     Text(entry.createdAt.formatted(date: .abbreviated, time: .omitted))
                 }
-                TableColumn("Type") { entry in
+                TableColumn("Type", value: \.type.rawValue) { entry in
                     Picker("", selection: Binding(
                         get: { entry.type },
                         set: { newValue in updateEntry(entry, newType: newValue) }
@@ -84,7 +85,7 @@ struct GlobalLedgerView: View {
                     }
                     .labelsHidden()
                 }
-                TableColumn("Notes") { entry in
+                TableColumn("Notes", value: \.sortUpdate) { entry in
                     TextField("Notes", text: Binding(
                         get: { entry.update ?? "" },
                         set: { newValue in updateEntry(entry, newUpdate: newValue) }
