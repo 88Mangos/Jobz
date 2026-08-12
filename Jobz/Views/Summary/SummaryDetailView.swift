@@ -1,10 +1,14 @@
 import SwiftUI
+import GRDB
 
 struct SummaryDetailView: View {
     let applicationId: Int64
     @State private var application: JobApplication?
     @State private var ledgerEntries: [LedgerEntry] = []
     @State private var showingAddLedgerForm = false
+    @State private var entryToEdit: LedgerEntry?
+    @State private var isEditingNotes = false
+    @State private var editedNotes = ""
     
     private let applicationService = ApplicationService()
     
@@ -21,10 +25,54 @@ struct SummaryDetailView: View {
                                 .font(.title2)
                                 .foregroundColor(.secondary)
                             
-                            if let notes = app.roleExtraNotes, !notes.isEmpty {
-                                Text(notes)
+                            if let extraNotes = app.roleExtraNotes, !extraNotes.isEmpty {
+                                Text(extraNotes)
                                     .font(.body)
                                     .foregroundColor(.secondary)
+                            }
+                            
+                            if isEditingNotes {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    TextField("Application notes", text: $editedNotes, axis: .vertical)
+                                        .textFieldStyle(.roundedBorder)
+                                        .font(.body)
+                                    HStack {
+                                        Button("Save") {
+                                            saveNotes(app: app)
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                        .controlSize(.small)
+                                        
+                                        Button("Cancel") {
+                                            isEditingNotes = false
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                    }
+                                }
+                            } else {
+                                HStack(alignment: .top) {
+                                    if let notes = app.notes, !notes.isEmpty {
+                                        Text(notes)
+                                            .font(.body)
+                                            .foregroundColor(.secondary)
+                                    } else {
+                                        Text("No application notes")
+                                            .font(.body)
+                                            .foregroundColor(.secondary)
+                                            .italic()
+                                    }
+                                    
+                                    Button(action: {
+                                        editedNotes = app.notes ?? ""
+                                        isEditingNotes = true
+                                    }) {
+                                        Image(systemName: "pencil")
+                                            .foregroundColor(.secondary)
+                                            .imageScale(.small)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
                         }
                         
@@ -90,6 +138,10 @@ struct SummaryDetailView: View {
                                     
                                     Spacer()
                                 }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    entryToEdit = entry
+                                }
                             }
                         }
                     }
@@ -109,6 +161,9 @@ struct SummaryDetailView: View {
         .sheet(isPresented: $showingAddLedgerForm) {
             AddLedgerEventForm(applicationId: applicationId, onSave: loadData)
         }
+        .sheet(item: $entryToEdit) { entry in
+            EditLedgerEventForm(entry: entry, onSave: loadData)
+        }
     }
     
     private func loadData() {
@@ -117,6 +172,20 @@ struct SummaryDetailView: View {
             ledgerEntries = try applicationService.fetchLedgerEntries(for: applicationId)
         } catch {
             print("Error loading data: \(error)")
+        }
+    }
+    
+    private func saveNotes(app: JobApplication) {
+        var updatedApp = app
+        updatedApp.notes = editedNotes.isEmpty ? nil : editedNotes
+        do {
+            try applicationService.dbQueue.write { db in
+                try updatedApp.update(db)
+            }
+            application = updatedApp
+            isEditingNotes = false
+        } catch {
+            print("Failed to save notes: \(error)")
         }
     }
     
