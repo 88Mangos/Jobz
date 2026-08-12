@@ -9,6 +9,8 @@ struct SummaryDetailView: View {
     @State private var entryToEdit: LedgerEntry?
     @State private var isEditingNotes = false
     @State private var editedNotes = ""
+    @State private var isEditingLocation = false
+    @State private var editedLocation: String? = nil
     
     private let applicationService = ApplicationService()
     
@@ -76,9 +78,44 @@ struct SummaryDetailView: View {
                             }
                         }
                         
-                        if let loc = app.location, !loc.isEmpty {
-                            Text(loc)
-                                .font(.body)
+                        if isEditingLocation {
+                            HStack {
+                                MultiSelectLocationMenu(selectedLocationsStr: $editedLocation)
+                                    .padding(.trailing, 8)
+                                Button("Save") {
+                                    saveLocation(app: app)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.small)
+                                
+                                Button("Cancel") {
+                                    isEditingLocation = false
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                            }
+                        } else {
+                            HStack(alignment: .center) {
+                                if let loc = app.location, !loc.isEmpty {
+                                    Text(loc)
+                                        .font(.body)
+                                } else {
+                                    Text("No location")
+                                        .font(.body)
+                                        .foregroundColor(.secondary)
+                                        .italic()
+                                }
+                                
+                                Button(action: {
+                                    editedLocation = app.location
+                                    isEditingLocation = true
+                                }) {
+                                    Image(systemName: "pencil")
+                                        .foregroundColor(.secondary)
+                                        .imageScale(.small)
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
                     .padding(.bottom)
@@ -186,6 +223,20 @@ struct SummaryDetailView: View {
             isEditingNotes = false
         } catch {
             print("Failed to save notes: \(error)")
+        }
+    }
+    
+    private func saveLocation(app: JobApplication) {
+        var updatedApp = app
+        updatedApp.location = editedLocation?.isEmpty == true ? nil : editedLocation
+        do {
+            try applicationService.dbQueue.write { db in
+                try updatedApp.update(db)
+            }
+            application = updatedApp
+            isEditingLocation = false
+        } catch {
+            print("Failed to save location: \(error)")
         }
     }
     
