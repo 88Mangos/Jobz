@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		71AD656F302BE8D60097C576 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 71AD656E302BE8D60097C576 /* GRDB */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		71AD6551302BE7F90097C576 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				71AD656F302BE8D60097C576 /* GRDB in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = Jobz;
 			packageProductDependencies = (
+				71AD656E302BE8D60097C576 /* GRDB */,
 			);
 			productName = Jobz;
 			productReference = 71AD6543302BE7F90097C576 /* Jobz.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 71AD653A302BE7F90097C576;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				71AD656D302BE8D60097C576 /* XCRemoteSwiftPackageReference "GRDB" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 71AD6544302BE7F90097C576 /* Products */;
 			projectDirPath = "";
@@ -563,6 +572,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		71AD656D302BE8D60097C576 /* XCRemoteSwiftPackageReference "GRDB" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		71AD656E302BE8D60097C576 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 71AD656D302BE8D60097C576 /* XCRemoteSwiftPackageReference "GRDB" */;
+			productName = GRDB;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 71AD653B302BE7F90097C576 /* Project object */;
 }
