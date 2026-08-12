@@ -14,11 +14,11 @@ struct DashboardView: View {
                 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
                     StatusBreakdownChart(records: records)
-                    ApplicationsOverTimeChart(records: records)
+                    WeeklyGoalDonutChart(records: records)
                 }
                 
                 HStack {
-                    WeeklyGoalDonutChart(records: records)
+                        ApplicationsOverTimeChart(records: records)
                         .frame(maxWidth: .infinity)
                     Spacer()
                 }

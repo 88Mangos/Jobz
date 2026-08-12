@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- **Dashboard Chart Layout & Timeline Axes**: Reorganized dashboard chart layout and upgraded `ApplicationsOverTimeChart` with clamped X-axis bounds starting at the initial data date, monthly grid ticks/labels, dashed year divider lines, and centered year headers.
 - **Event-Specific Timeline Colors**: Extended `EventType` with semantic color mappings (e.g., Applied, Interview, Offer, Rejection, Accepted) to visually distinguish timeline event types.
 - **Connected Timeline View**: Updated `SummaryDetailView` to render continuous vertical lines connecting timeline event dots seamlessly.
 - **Robust CSV Import & Season Dropdown**: Enhanced `CSVImporter` with quoted field parsing, flexible date format matching, auto-increment sequence synchronization, and added additional season dropdown options in `ApplicationTableView`.
