@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Added
+- **Dynamic Location Menu**: Supported adding custom locations dynamically in the Multi-select Location dropdown menu. Custom locations are saved to AppStorage.
+- **Application Location Editing**: Added inline editing for application location in the Summary detail view, leveraging the updated Multi-select Location dropdown menu.
 - **Ledger Event Editing**: Added `EditLedgerEventForm` to allow modifying existing ledger timeline events directly from the Summary detail view.
 - **Datetime Inputs**: Upgraded date pickers in ledger event forms to support both date and precise time inputs.
 - **Application Notes Editing**: Rendered application notes below the role extra notes in the Summary detail view, complete with an inline edit mode for fast updates.
