@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import GRDB
 
 enum EventType: String, Codable, CaseIterable, Identifiable {
@@ -11,6 +12,18 @@ enum EventType: String, Codable, CaseIterable, Identifiable {
     case accepted = "Accepted"
     
     var id: String { rawValue }
+    
+    var color: Color {
+        switch self {
+        case .applied: return .blue
+        case .oa: return .purple
+        case .interview: return .orange
+        case .update: return .teal
+        case .offer: return .mint
+        case .rejection: return .red
+        case .accepted: return .green
+        }
+    }
 }
 
 struct LedgerEntry: Codable, FetchableRecord, MutablePersistableRecord, Identifiable {

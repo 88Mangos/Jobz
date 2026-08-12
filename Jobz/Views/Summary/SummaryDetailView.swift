@@ -47,31 +47,50 @@ struct SummaryDetailView: View {
                         }
                     }
                     
-                    ForEach(ledgerEntries) { entry in
-                        HStack(alignment: .top) {
-                            VStack {
-                                Circle()
-                                    .fill(Color.accentColor)
-                                    .frame(width: 10, height: 10)
-                                    .padding(.top, 5)
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 2)
-                            }
-                            
-                            VStack(alignment: .leading) {
-                                Text(entry.type.rawValue)
-                                    .font(.headline)
-                                Text(entry.createdAt, style: .date)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                if let update = entry.update, !update.isEmpty {
-                                    Text(update)
-                                        .font(.body)
-                                        .padding(.top, 2)
+                    if ledgerEntries.isEmpty {
+                        Text("No updates recorded yet.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    } else {
+                        VStack(spacing: 0) {
+                            ForEach(Array(ledgerEntries.enumerated()), id: \.element.sortId) { index, entry in
+                                HStack(alignment: .top, spacing: 12) {
+                                    ZStack(alignment: .top) {
+                                        GeometryReader { geometry in
+                                            Path { path in
+                                                let startY: CGFloat = (index == 0) ? 10 : 0
+                                                let endY: CGFloat = (index == ledgerEntries.count - 1) ? 10 : geometry.size.height
+                                                path.move(to: CGPoint(x: geometry.size.width / 2, y: startY))
+                                                path.addLine(to: CGPoint(x: geometry.size.width / 2, y: endY))
+                                            }
+                                            .stroke(Color.gray.opacity(0.35), lineWidth: 2)
+                                        }
+                                        .frame(width: 12)
+                                        
+                                        Circle()
+                                            .fill(entry.type.color)
+                                            .frame(width: 10, height: 10)
+                                            .padding(.top, 5)
+                                    }
+                                    .frame(width: 12)
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(entry.type.rawValue)
+                                            .font(.headline)
+                                        Text(entry.createdAt, style: .date)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        if let update = entry.update, !update.isEmpty {
+                                            Text(update)
+                                                .font(.body)
+                                                .padding(.top, 2)
+                                        }
+                                    }
+                                    .padding(.bottom, 16)
+                                    
+                                    Spacer()
                                 }
                             }
-                            .padding(.bottom, 10)
                         }
                     }
                 } else {
