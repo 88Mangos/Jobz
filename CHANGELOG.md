@@ -10,7 +10,10 @@
 - **Inline Editing**: Both the `ApplicationDataGrid` and `GlobalLedgerView` support clicking into cells to seamlessly edit data (e.g. updating company name, role, event type, or notes) without opening a separate form.
 - **Quick-Add Data Entry**: Added an input row at the bottom of both spreadsheet views to rapidly insert new applications and ledger entries.
 - **CSV Importer**: Added a "CSV Import" button to both spreadsheet views, allowing bulk importing of Applications and Ledger events via file selection.
-- **Sandbox Configuration**: Added `.agents/rules/database_location.md` to document the sandbox SQLite path for agent context.
+- **Multi-Select Deletion**: Replaced quick-add rows with a "Delete Selected" button in the main toolbar of both spreadsheet views. Added support for bulk-selecting spreadsheet rows using `Command-click` or `Shift-click`.
+- **Strict CSV Validation**: `CSVImporter` now intelligently maps headers by name (agnostic to column order) and strictly validates required headers.
+- **CSV Error Reporting**: Attempting to upload a malformed CSV will now halt the process and present a native UI alert detailing the exact matched, missing, and extraneous column headers.
+- **Chart Customization Guide**: Generated `CustomizingCharts.md` to document how to override Swift Chart colors for personalization.
 
 ### Fixed
 - **Missing Application Bug**: Fixed a GRDB decoding error where applications with zero ledger events were not displayed. Added `CodingKeys` to `ApplicationStatusRecord` to properly map `snake_case` SQL columns, and made `lastUpdated` optional.

@@ -7,16 +7,23 @@ struct ApplicationDataGrid: View {
     var onRefresh: () -> Void
     private let applicationService = ApplicationService()
     
-    // Quick Add State
+    // Quick Add State (Commented out per user request)
+    /*
     @State private var newCompanyName = ""
     @State private var newRole = ""
     @State private var newLocation = ""
+    */
     
     @State private var isImporting = false
+    @State private var selection = Set<ApplicationStatusRecord.ID>()
+    
+    @State private var csvError: String? = nil
+    @State private var showCSVError = false
+    @State private var showDeleteConfirmation = false
     
     var body: some View {
         VStack(spacing: 0) {
-            Table(applications) {
+            Table(applications, selection: $selection) {
                 TableColumn("Company") { app in
                     TextField("Company", text: Binding(
                         get: { app.companyName },
@@ -40,9 +47,9 @@ struct ApplicationDataGrid: View {
                 }
             }
             
+            // Quick Add Row (Commented out)
+            /*
             Divider()
-            
-            // Quick Add Row
             HStack {
                 TextField("New Company", text: $newCompanyName)
                     .textFieldStyle(.roundedBorder)
@@ -62,6 +69,22 @@ struct ApplicationDataGrid: View {
             }
             .padding()
             .background(Color(NSColor.controlBackgroundColor))
+            */
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: { showDeleteConfirmation = true }) {
+                    Label("Delete Selected", systemImage: "trash")
+                }
+                .disabled(selection.isEmpty)
+                .labelStyle(.titleAndIcon)
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: { isImporting = true }) {
+                    Label("Import CSV", systemImage: "square.and.arrow.down")
+                }
+                .labelStyle(.titleAndIcon)
+            }
         }
         .fileImporter(
             isPresented: $isImporting,
@@ -73,8 +96,21 @@ struct ApplicationDataGrid: View {
                 guard let url = urls.first else { return }
                 importCSV(url: url)
             case .failure(let error):
-                print("Error selecting file: \\(error.localizedDescription)")
+                print("Error selecting file: \(error.localizedDescription)")
             }
+        }
+        .alert("Confirm Deletion", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) { deleteSelected() }
+        } message: {
+            Text("Are you sure you want to delete \(selection.count) application(s)? This action cannot be undone.")
+        }
+        .alert(isPresented: $showCSVError) {
+            Alert(
+                title: Text("CSV Import Failed"),
+                message: Text(csvError ?? "Unknown error"),
+                dismissButton: .default(Text("OK"))
+            )
         }
     }
     
@@ -91,10 +127,11 @@ struct ApplicationDataGrid: View {
             }
             onRefresh()
         } catch {
-            print("Error updating application: \\(error)")
+            print("Error updating application: \(error)")
         }
     }
     
+    /*
     private func quickAdd() {
         var newApp = JobApplication(
             companyName: newCompanyName,
@@ -108,17 +145,31 @@ struct ApplicationDataGrid: View {
             newLocation = ""
             onRefresh()
         } catch {
-            print("Error saving quick add: \\(error)")
+            print("Error saving quick add: \(error)")
+        }
+    }
+    */
+    
+    private func deleteSelected() {
+        do {
+            try applicationService.deleteApplications(ids: selection)
+            selection.removeAll()
+            onRefresh()
+        } catch {
+            print("Error deleting applications: \(error)")
         }
     }
     
     private func importCSV(url: URL) {
-        // We will implement CSVImporter and call it here.
         do {
             try CSVImporter.importApplications(from: url, using: applicationService)
             onRefresh()
+        } catch let error as LocalizedError {
+            csvError = error.errorDescription
+            showCSVError = true
         } catch {
-            print("Error importing CSV: \\(error)")
+            csvError = error.localizedDescription
+            showCSVError = true
         }
     }
 }

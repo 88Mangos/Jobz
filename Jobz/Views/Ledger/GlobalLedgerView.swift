@@ -10,13 +10,20 @@ struct GlobalLedgerView: View {
     @State private var selectedApplicationId: Int64? = nil
     @State private var isGrouped = false
     
-    // Quick Add State
+    // Quick Add State (Commented out per user request)
+    /*
     @State private var newAppId: Int64? = nil
     @State private var newDate = Date()
     @State private var newType: EventType = .update
     @State private var newUpdate = ""
+    */
     
     @State private var isImporting = false
+    @State private var selection = Set<LedgerEntry.ID>()
+    
+    @State private var csvError: String? = nil
+    @State private var showCSVError = false
+    @State private var showDeleteConfirmation = false
     
     var filteredAndSortedEntries: [LedgerEntry] {
         var result = entries
@@ -59,7 +66,7 @@ struct GlobalLedgerView: View {
             }
             .padding()
             
-            Table(filteredAndSortedEntries) {
+            Table(filteredAndSortedEntries, selection: $selection) {
                 TableColumn("Application") { entry in
                     Text(appName(for: entry.applicationId))
                 }
@@ -85,9 +92,9 @@ struct GlobalLedgerView: View {
                 }
             }
             
+            // Quick Add Row (Commented out)
+            /*
             Divider()
-            
-            // Quick Add Row
             HStack {
                 Picker("App", selection: $newAppId) {
                     Text("Select...").tag(Int64?.none)
@@ -123,8 +130,24 @@ struct GlobalLedgerView: View {
             }
             .padding()
             .background(Color(NSColor.controlBackgroundColor))
+            */
         }
         .navigationTitle("Global Ledger")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: { showDeleteConfirmation = true }) {
+                    Label("Delete Selected", systemImage: "trash")
+                }
+                .disabled(selection.isEmpty)
+                .labelStyle(.titleAndIcon)
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: { isImporting = true }) {
+                    Label("Import CSV", systemImage: "square.and.arrow.down")
+                }
+                .labelStyle(.titleAndIcon)
+            }
+        }
         .onAppear {
             loadData()
         }
@@ -138,8 +161,21 @@ struct GlobalLedgerView: View {
                 guard let url = urls.first else { return }
                 importCSV(url: url)
             case .failure(let error):
-                print("Error selecting file: \\(error.localizedDescription)")
+                print("Error selecting file: \(error.localizedDescription)")
             }
+        }
+        .alert("Confirm Deletion", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) { deleteSelected() }
+        } message: {
+            Text("Are you sure you want to delete \(selection.count) ledger entry(s)? This action cannot be undone.")
+        }
+        .alert(isPresented: $showCSVError) {
+            Alert(
+                title: Text("CSV Import Failed"),
+                message: Text(csvError ?? "Unknown error"),
+                dismissButton: .default(Text("OK"))
+            )
         }
     }
     
@@ -148,7 +184,7 @@ struct GlobalLedgerView: View {
             entries = try applicationService.fetchAllLedgerEntries()
             applications = try applicationService.fetchApplications()
         } catch {
-            print("Error loading data: \\(error)")
+            print("Error loading data: \(error)")
         }
     }
     
@@ -167,10 +203,11 @@ struct GlobalLedgerView: View {
             }
             loadData()
         } catch {
-            print("Error updating entry: \\(error)")
+            print("Error updating entry: \(error)")
         }
     }
     
+    /*
     private func quickAdd() {
         guard let appId = newAppId else { return }
         var newEntry = LedgerEntry(
@@ -186,7 +223,19 @@ struct GlobalLedgerView: View {
             newDate = Date()
             loadData()
         } catch {
-            print("Error saving ledger entry: \\(error)")
+            print("Error saving ledger entry: \(error)")
+        }
+    }
+    */
+    
+    private func deleteSelected() {
+        do {
+            let validIds = Set(selection.compactMap { $0 })
+            try applicationService.deleteLedgerEntries(ids: validIds)
+            selection.removeAll()
+            loadData()
+        } catch {
+            print("Error deleting ledger entries: \(error)")
         }
     }
     
@@ -194,8 +243,12 @@ struct GlobalLedgerView: View {
         do {
             try CSVImporter.importLedger(from: url, using: applicationService)
             loadData()
+        } catch let error as LocalizedError {
+            csvError = error.errorDescription
+            showCSVError = true
         } catch {
-            print("Error importing ledger CSV: \\(error)")
+            csvError = error.localizedDescription
+            showCSVError = true
         }
     }
 }
