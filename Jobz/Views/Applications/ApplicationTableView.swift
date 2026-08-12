@@ -80,6 +80,9 @@ struct ApplicationTableView: View {
                         .textFieldStyle(.roundedBorder)
                     Picker("", selection: $newAppSeason) {
                         Text("Season").tag("")
+                        Text("Summer 2025").tag("Summer 2025")
+                        Text("Fall 2025").tag("Fall 2025")
+                        Text("Spring 2026").tag("Spring 2026")
                         Text("Summer 2026").tag("Summer 2026")
                         Text("Fall 2026").tag("Fall 2026")
                         Text("Winter 2027").tag("Winter 2027")
@@ -165,6 +168,9 @@ struct ApplicationTableView: View {
                             set: { newValue in updateApplication(app, newSeason: newValue.isEmpty ? nil : newValue) }
                         )) {
                             Text("None").tag("")
+                            Text("Summer 2025").tag("Summer 2025")
+                            Text("Fall 2025").tag("Fall 2025")
+                            Text("Spring 2026").tag("Spring 2026")
                             Text("Summer 2026").tag("Summer 2026")
                             Text("Fall 2026").tag("Fall 2026")
                             Text("Winter 2027").tag("Winter 2027")
