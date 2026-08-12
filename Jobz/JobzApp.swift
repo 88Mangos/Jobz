@@ -19,10 +19,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct JobzApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+        }
+        
+        Window("About Jobz & Licenses", id: "about-licenses") {
+            AboutView()
+                .frame(minWidth: 550, minHeight: 550)
+        }
+        .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Jobz & Licenses") {
+                    openWindow(id: "about-licenses")
+                }
+            }
         }
     }
 }

@@ -102,3 +102,21 @@ Applications do not store a static status string. Instead, **Status View** dynam
 ```bash
 xcodebuild -project Jobz.xcodeproj -scheme Jobz build
 ```
+
+---
+
+## 📜 License & Attributions
+
+Jobz is open source software released under the [MIT License](LICENSE).
+
+### Third-Party Open Source Software
+
+This application incorporates open-source software libraries. We gratefully acknowledge the following third-party package:
+
+- **[GRDB.swift](https://github.com/groue/GRDB.swift)**
+  - **Author**: Gwendal Roué ([@groue](https://github.com/groue))
+  - **License**: [MIT License](https://github.com/groue/GRDB.swift/blob/master/LICENSE)
+  - **Notice**: Copyright (C) 2015-2025 Gwendal Roué
+
+For complete third-party license texts and copyright notices, please consult [`ACKNOWLEDGEMENTS.md`](ACKNOWLEDGEMENTS.md) or open the **About & Licenses** view directly in the application.
+

@@ -9,25 +9,34 @@ struct ContentView: View {
         case applications
         case ledger
         case sqlLab
+        case about
     }
     
     var body: some View {
         NavigationSplitView {
             List(selection: $selection) {
-                NavigationLink(value: SidebarItem.dashboard) {
-                    Label("Dashboard", systemImage: "house")
+                Section("Main") {
+                    NavigationLink(value: SidebarItem.dashboard) {
+                        Label("Dashboard", systemImage: "house")
+                    }
+                    NavigationLink(value: SidebarItem.summary) {
+                        Label("Summary", systemImage: "chart.bar.doc.horizontal")
+                    }
+                    NavigationLink(value: SidebarItem.applications) {
+                        Label("Applications", systemImage: "tablecells")
+                    }
+                    NavigationLink(value: SidebarItem.ledger) {
+                        Label("Ledger", systemImage: "text.book.closed")
+                    }
+                    NavigationLink(value: SidebarItem.sqlLab) {
+                        Label("SQL Lab", systemImage: "server.rack")
+                    }
                 }
-                NavigationLink(value: SidebarItem.summary) {
-                    Label("Summary", systemImage: "chart.bar.doc.horizontal")
-                }
-                NavigationLink(value: SidebarItem.applications) {
-                    Label("Applications", systemImage: "tablecells")
-                }
-                NavigationLink(value: SidebarItem.ledger) {
-                    Label("Ledger", systemImage: "text.book.closed")
-                }
-                NavigationLink(value: SidebarItem.sqlLab) {
-                    Label("SQL Lab", systemImage: "server.rack")
+                
+                Section("Information") {
+                    NavigationLink(value: SidebarItem.about) {
+                        Label("About & Licenses", systemImage: "info.circle")
+                    }
                 }
             }
             .navigationTitle("Jobz")
@@ -44,6 +53,8 @@ struct ContentView: View {
                     LedgerTableView()
                 case .sqlLab:
                     SQLLabView()
+                case .about:
+                    AboutView()
                 case nil:
                     Text("Select an item from the sidebar")
                 }
