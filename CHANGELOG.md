@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Added
+- **Quick-Add Bar**: Reintroduced the Quick-Add bar to the top of both the Applications and Ledger spreadsheet views, visible only when Edit Mode is toggled on.
+- **Application ID Editing**: The `application_id` field can now be explicitly set when creating a new application via the Quick-Add bar, and is also fully editable for existing applications in the spreadsheet. Updating an application's ID will safely migrate all associated ledger entries.
+- **Dropdown Enums for Spreadsheets**: Upgraded the "Season" column to use a predefined dropdown `Picker`, and the "Location" column to use a custom multi-select checkbox menu (saving as a comma-separated list) for faster data entry in Edit Mode.
 - **SQL Lab**: Added a new "SQL Lab" tab to the sidebar that allows executing raw, read-only SQLite queries against the database. For security and to encourage using the GUI for modifications, this lab is strictly restricted to read-only queries (like SELECT), and results are safely limited to 100 rows to prevent UI hangs.
 - **Spreadsheet Edit Mode**: Added an "Edit Mode" toggle to the toolbar in the Applications and Ledger spreadsheet views. When disabled, the tables render as read-only text for significantly improved scrolling performance. When enabled, the tables use `TextField`, `Picker`, and `DatePicker` bindings to allow inline data entry.
 - **Role Name Expansion**: The `SummaryDetailView` now expands standard tech role abbreviations (e.g., SWE to Software Engineer). Any extra role notes are cleanly formatted on a new line beneath the primary role title.

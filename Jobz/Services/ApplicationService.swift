@@ -25,6 +25,16 @@ class ApplicationService {
         }
     }
     
+    func updateApplicationId(oldId: Int64, newId: Int64) throws {
+        try dbQueue.write { db in
+            guard var oldApp = try JobApplication.fetchOne(db, key: oldId) else { return }
+            oldApp.id = newId
+            try oldApp.insert(db)
+            try db.execute(sql: "UPDATE ledger SET application_id = ? WHERE application_id = ?", arguments: [newId, oldId])
+            try JobApplication.deleteOne(db, key: oldId)
+        }
+    }
+    
     func addLedgerEntry(_ entry: inout LedgerEntry) throws {
         try dbQueue.write { db in
             try entry.insert(db)

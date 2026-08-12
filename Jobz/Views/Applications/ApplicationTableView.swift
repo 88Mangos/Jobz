@@ -2,6 +2,48 @@ import SwiftUI
 import UniformTypeIdentifiers
 import GRDB
 
+struct MultiSelectLocationMenu: View {
+    let options = ["Remote", "San Francisco, CA", "New York, NY", "Seattle, WA", "Austin, TX"]
+    @Binding var selectedLocationsStr: String?
+    
+    var selectedLocations: Set<String> {
+        guard let str = selectedLocationsStr, !str.isEmpty else { return [] }
+        return Set(str.components(separatedBy: ", "))
+    }
+    
+    var body: some View {
+        Menu {
+            ForEach(options, id: \.self) { option in
+                Button(action: {
+                    var current = selectedLocations
+                    if current.contains(option) {
+                        current.remove(option)
+                    } else {
+                        current.insert(option)
+                    }
+                    if current.isEmpty {
+                        selectedLocationsStr = nil
+                    } else {
+                        let sorted = options.filter { current.contains($0) }
+                        selectedLocationsStr = sorted.joined(separator: ", ")
+                    }
+                }) {
+                    HStack {
+                        Text(option)
+                        if selectedLocations.contains(option) {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            Text(selectedLocationsStr?.isEmpty == false ? selectedLocationsStr! : "Select Locations")
+                .lineLimit(1)
+                .truncationMode(.tail)
+        }
+    }
+}
+
 struct ApplicationTableView: View {
     @State private var applications: [JobApplication] = []
     private let applicationService = ApplicationService()
@@ -15,15 +57,58 @@ struct ApplicationTableView: View {
     @State private var sortOrder = [KeyPathComparator(\JobApplication.companyName)]
     @State private var isEditing = false
     
+    @State private var newAppId = ""
+    @State private var newAppCompany = ""
+    @State private var newAppRole = ""
+    @State private var newAppSeason = ""
+    @State private var newAppLocation: String? = nil
+    
     var sortedApplications: [JobApplication] {
         applications.sorted(using: sortOrder)
     }
     
     var body: some View {
         VStack(spacing: 0) {
+            if isEditing {
+                HStack {
+                    TextField("ID (opt)", text: $newAppId)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 80)
+                    TextField("Company", text: $newAppCompany)
+                        .textFieldStyle(.roundedBorder)
+                    TextField("Role", text: $newAppRole)
+                        .textFieldStyle(.roundedBorder)
+                    Picker("", selection: $newAppSeason) {
+                        Text("Season").tag("")
+                        Text("Summer 2026").tag("Summer 2026")
+                        Text("Fall 2026").tag("Fall 2026")
+                        Text("Winter 2027").tag("Winter 2027")
+                        Text("Spring 2027").tag("Spring 2027")
+                        Text("Summer 2027").tag("Summer 2027")
+                        Text("Fall 2027").tag("Fall 2027")
+                    }
+                    .labelsHidden()
+                    .frame(width: 120)
+                    MultiSelectLocationMenu(selectedLocationsStr: $newAppLocation)
+                        .frame(width: 150)
+                    Button("Add") {
+                        addApplication()
+                    }
+                    .disabled(newAppCompany.isEmpty || newAppRole.isEmpty)
+                }
+                .padding()
+            }
+            
             Table(sortedApplications, selection: $selection, sortOrder: $sortOrder) {
                 TableColumn("ID", value: \.sortId) { app in
-                    Text("\(app.id ?? 0)")
+                    if isEditing {
+                        TextField("ID", value: Binding(
+                            get: { app.id },
+                            set: { newValue in updateApplication(app, newId: newValue) }
+                        ), format: .number)
+                    } else {
+                        Text("\(app.id ?? 0)")
+                    }
                 }
                 TableColumn("Company", value: \.companyName) { app in
                     if isEditing {
@@ -75,18 +160,27 @@ struct ApplicationTableView: View {
                 }
                 TableColumn("Season", value: \.sortSeason) { app in
                     if isEditing {
-                        TextField("Season", text: Binding(
+                        Picker("", selection: Binding(
                             get: { app.season ?? "" },
-                            set: { newValue in updateApplication(app, newSeason: newValue) }
-                        ))
+                            set: { newValue in updateApplication(app, newSeason: newValue.isEmpty ? nil : newValue) }
+                        )) {
+                            Text("None").tag("")
+                            Text("Summer 2026").tag("Summer 2026")
+                            Text("Fall 2026").tag("Fall 2026")
+                            Text("Winter 2027").tag("Winter 2027")
+                            Text("Spring 2027").tag("Spring 2027")
+                            Text("Summer 2027").tag("Summer 2027")
+                            Text("Fall 2027").tag("Fall 2027")
+                        }
+                        .labelsHidden()
                     } else {
                         Text(app.season ?? "")
                     }
                 }
                 TableColumn("Location", value: \.sortLocation) { app in
                     if isEditing {
-                        TextField("Location", text: Binding(
-                            get: { app.location ?? "" },
+                        MultiSelectLocationMenu(selectedLocationsStr: Binding(
+                            get: { app.location },
                             set: { newValue in updateApplication(app, newLocation: newValue) }
                         ))
                     } else {
@@ -168,9 +262,35 @@ struct ApplicationTableView: View {
         }
     }
     
-    private func updateApplication(_ app: JobApplication, newCompanyName: String? = nil, newRole: String? = nil, newRoleExtraNotes: String? = nil, newDuration: String? = nil, newSeason: String? = nil, newLocation: String? = nil, newNotes: String? = nil) {
+    private func addApplication() {
+        var newApp = JobApplication(
+            id: newAppId.isEmpty ? nil : Int64(newAppId),
+            companyName: newAppCompany,
+            role: newAppRole,
+            season: newAppSeason.isEmpty ? nil : newAppSeason,
+            location: newAppLocation
+        )
         do {
+            try applicationService.createApplication(&newApp)
+            newAppId = ""
+            newAppCompany = ""
+            newAppRole = ""
+            newAppSeason = ""
+            newAppLocation = nil
+            loadApplications()
+        } catch {
+            print("Error adding application: \(error)")
+        }
+    }
+    
+    private func updateApplication(_ app: JobApplication, newId: Int64? = nil, newCompanyName: String? = nil, newRole: String? = nil, newRoleExtraNotes: String? = nil, newDuration: String? = nil, newSeason: String? = nil, newLocation: String? = nil, newNotes: String? = nil) {
+        do {
+            if let newId = newId, let oldId = app.id, newId != oldId {
+                try applicationService.updateApplicationId(oldId: oldId, newId: newId)
+            }
+            
             var updatedApp = app
+            if let newId = newId { updatedApp.id = newId }
             if let companyName = newCompanyName { updatedApp.companyName = companyName }
             if let role = newRole { updatedApp.role = role }
             if let roleExtraNotes = newRoleExtraNotes { updatedApp.roleExtraNotes = roleExtraNotes.isEmpty ? nil : roleExtraNotes }

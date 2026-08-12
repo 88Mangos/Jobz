@@ -19,6 +19,10 @@ struct LedgerTableView: View {
     @State private var sortOrder = [KeyPathComparator(\LedgerEntry.createdAt, order: .reverse)]
     @State private var isEditing = false
     
+    @State private var newLedgerAppId = ""
+    @State private var newLedgerType: EventType = .applied
+    @State private var newLedgerNotes = ""
+    
     var filteredAndSortedEntries: [LedgerEntry] {
         var result = entries
         
@@ -59,6 +63,27 @@ struct LedgerTableView: View {
                 Spacer()
             }
             .padding()
+            
+            if isEditing {
+                HStack {
+                    TextField("App ID", text: $newLedgerAppId)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 100)
+                    Picker("Type", selection: $newLedgerType) {
+                        ForEach(EventType.allCases) { type in
+                            Text(type.rawValue).tag(type)
+                        }
+                    }
+                    .labelsHidden()
+                    TextField("Notes", text: $newLedgerNotes)
+                        .textFieldStyle(.roundedBorder)
+                    Button("Add") {
+                        addLedgerEntry()
+                    }
+                    .disabled(newLedgerAppId.isEmpty || Int64(newLedgerAppId) == nil)
+                }
+                .padding([.horizontal, .bottom])
+            }
             
             Table(filteredAndSortedEntries, selection: $selection, sortOrder: $sortOrder) {
                 TableColumn("ID", value: \.sortId) { entry in
@@ -175,6 +200,25 @@ struct LedgerTableView: View {
             applications = try applicationService.fetchApplications()
         } catch {
             print("Error loading data: \(error)")
+        }
+    }
+    
+    private func addLedgerEntry() {
+        guard let appId = Int64(newLedgerAppId) else { return }
+        var newEntry = LedgerEntry(
+            createdAt: Date(),
+            type: newLedgerType,
+            applicationId: appId,
+            update: newLedgerNotes.isEmpty ? nil : newLedgerNotes
+        )
+        do {
+            try applicationService.addLedgerEntry(&newEntry)
+            newLedgerAppId = ""
+            newLedgerType = .applied
+            newLedgerNotes = ""
+            loadData()
+        } catch {
+            print("Error adding ledger entry: \(error)")
         }
     }
     
