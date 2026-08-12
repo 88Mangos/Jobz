@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Added
+- **Event-Specific Timeline Colors**: Extended `EventType` with semantic color mappings (e.g., Applied, Interview, Offer, Rejection, Accepted) to visually distinguish timeline event types.
+- **Connected Timeline View**: Updated `SummaryDetailView` to render continuous vertical lines connecting timeline event dots seamlessly.
+- **Robust CSV Import & Season Dropdown**: Enhanced `CSVImporter` with quoted field parsing, flexible date format matching, auto-increment sequence synchronization, and added additional season dropdown options in `ApplicationTableView`.
 - **Quick-Add Bar**: Reintroduced the Quick-Add bar to the top of both the Applications and Ledger spreadsheet views, visible only when Edit Mode is toggled on.
 - **Application ID Editing**: The `application_id` field can now be explicitly set when creating a new application via the Quick-Add bar, and is also fully editable for existing applications in the spreadsheet. Updating an application's ID will safely migrate all associated ledger entries.
 - **Dropdown Enums for Spreadsheets**: Upgraded the "Season" column to use a predefined dropdown `Picker`, and the "Location" column to use a custom multi-select checkbox menu (saving as a comma-separated list) for faster data entry in Edit Mode.

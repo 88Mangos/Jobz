@@ -16,6 +16,104 @@ enum CSVError: Error, LocalizedError {
 }
 
 class CSVImporter {
+    
+    private static let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.date.rawValue)
+    
+    static func parseCSVRow(_ line: String) -> [String] {
+        var result: [String] = []
+        var current = ""
+        var insideQuotes = false
+        
+        for char in line {
+            if char == "\"" {
+                insideQuotes.toggle()
+            } else if char == "," && !insideQuotes {
+                result.append(current)
+                current = ""
+            } else {
+                current.append(char)
+            }
+        }
+        result.append(current)
+        return result.map { 
+            $0.replacingOccurrences(of: "\"", with: "")
+              .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+    
+    private static func fixTwoDigitYear(_ date: Date) -> Date {
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: date)
+        if year < 100 {
+            return calendar.date(byAdding: .year, value: 2000, to: date) ?? date
+        }
+        return date
+    }
+    
+    private static func parseDate(_ str: String) -> Date {
+        let sanitizedStr = str.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                              .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // 1. Try ISO8601
+        let isoFormatter = ISO8601DateFormatter()
+        if let date = isoFormatter.date(from: sanitizedStr) {
+            return fixTwoDigitYear(date)
+        }
+        
+        // 2. Explicit formatters with US POSIX locale
+        let dateFormats = [
+            "M/d/yy h:mm:ss a",
+            "M/d/yy h:mm a",
+            "M/d/yy H:mm:ss",
+            "M/d/yy H:mm",
+            "M/d/yy",
+            "MM/dd/yy h:mm:ss a",
+            "MM/dd/yy h:mm a",
+            "MM/dd/yy H:mm:ss",
+            "MM/dd/yy H:mm",
+            "MM/dd/yy",
+            "M/d/yyyy h:mm:ss a",
+            "M/d/yyyy h:mm a",
+            "M/d/yyyy H:mm:ss",
+            "M/d/yyyy H:mm",
+            "M/d/yyyy",
+            "MM/dd/yyyy h:mm:ss a",
+            "MM/dd/yyyy h:mm a",
+            "MM/dd/yyyy H:mm:ss",
+            "MM/dd/yyyy H:mm",
+            "MM/dd/yyyy",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd HH:mm",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd"
+        ]
+        
+        let twoDigitStart = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2000, month: 1, day: 1))
+        
+        for format in dateFormats {
+            let df = DateFormatter()
+            df.locale = Locale(identifier: "en_US_POSIX")
+            df.dateFormat = format
+            if format.contains("yy") && !format.contains("yyyy") {
+                df.twoDigitStartDate = twoDigitStart
+            }
+            if let date = df.date(from: sanitizedStr) {
+                return fixTwoDigitYear(date)
+            }
+        }
+        
+        // 3. Fallback to NSDataDetector (Apple Natural Language & Date Detector)
+        if let detector = dataDetector {
+            let range = NSRange(location: 0, length: sanitizedStr.utf16.count)
+            if let match = detector.firstMatch(in: sanitizedStr, options: [], range: range),
+               let date = match.date {
+                return fixTwoDigitYear(date)
+            }
+        }
+        
+        return Date()
+    }
+    
     static func importApplications(from url: URL, using service: ApplicationService) throws {
         guard url.startAccessingSecurityScopedResource() else {
             throw CSVError.fileUnreadable
@@ -23,16 +121,14 @@ class CSVImporter {
         defer { url.stopAccessingSecurityScopedResource() }
         
         let content = try String(contentsOf: url, encoding: .utf8)
-        let rows = content.components(separatedBy: CharacterSet.newlines).filter { !$0.isEmpty }
+        let rows = content.components(separatedBy: .newlines)
+                          .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         
         guard rows.count > 0 else { return }
         
         let expectedHeaders = Set(["company_name", "role", "duration", "season", "location", "notes"])
-        let actualHeaders = rows[0].components(separatedBy: ",").map { 
-            $0.replacingOccurrences(of: "\"", with: "")
-              .trimmingCharacters(in: .whitespacesAndNewlines)
-              .trimmingCharacters(in: .init(charactersIn: "\u{FEFF}"))
-              .lowercased()
+        let actualHeaders = parseCSVRow(rows[0]).map { 
+            $0.trimmingCharacters(in: .init(charactersIn: "\u{FEFF}")).lowercased()
         }
         let actualHeaderSet = Set(actualHeaders)
         
@@ -46,7 +142,6 @@ class CSVImporter {
         
         guard rows.count > 1 else { return }
         
-        // Find indices
         let aIdx = actualHeaders.firstIndex(of: "application_id")
         let cIdx = actualHeaders.firstIndex(of: "company_name")!
         let rIdx = actualHeaders.firstIndex(of: "role")!
@@ -57,23 +152,19 @@ class CSVImporter {
         let nIdx = actualHeaders.firstIndex(of: "notes")!
         
         for i in 1..<rows.count {
-            let cols = rows[i].components(separatedBy: ",").map { 
-                $0.replacingOccurrences(of: "\"", with: "")
-                  .trimmingCharacters(in: .whitespacesAndNewlines) 
-            }
-            // Ensure we have enough columns to access the max index safely, though components will usually match header count
-            guard cols.count == actualHeaders.count else { continue }
+            let cols = parseCSVRow(rows[i])
+            guard cols.count >= actualHeaders.count else { continue }
             
             var duration: String? = cols[dIdx].isEmpty ? nil : cols[dIdx]
             var season: String? = cols[sIdx].isEmpty ? nil : cols[sIdx]
             var location: String? = cols[lIdx].isEmpty ? nil : cols[lIdx]
             var notes: String? = cols[nIdx].isEmpty ? nil : cols[nIdx]
             var roleExtraNotes: String? = nil
-            if let rn = rnIdx {
+            if let rn = rnIdx, rn < cols.count {
                 roleExtraNotes = cols[rn].isEmpty ? nil : cols[rn]
             }
             var appId: Int64? = nil
-            if let a = aIdx, let parsedId = Int64(cols[a]) {
+            if let a = aIdx, a < cols.count, let parsedId = Int64(cols[a]) {
                 appId = parsedId
             }
             
@@ -89,6 +180,7 @@ class CSVImporter {
             )
             try service.createApplication(&app, skipLedger: true)
         }
+        try service.syncAutoIncrementSequences()
     }
     
     static func importLedger(from url: URL, using service: ApplicationService) throws {
@@ -98,17 +190,14 @@ class CSVImporter {
         defer { url.stopAccessingSecurityScopedResource() }
         
         let content = try String(contentsOf: url, encoding: .utf8)
-        let rows = content.components(separatedBy: CharacterSet.newlines).filter { !$0.isEmpty }
+        let rows = content.components(separatedBy: .newlines)
+                          .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         
         guard rows.count > 0 else { return }
         
-        // Validation
         let expectedHeaders = Set(["application_id", "created_at", "type", "update"])
-        let actualHeaders = rows[0].components(separatedBy: ",").map { 
-            $0.replacingOccurrences(of: "\"", with: "")
-              .trimmingCharacters(in: .whitespacesAndNewlines)
-              .trimmingCharacters(in: .init(charactersIn: "\u{FEFF}"))
-              .lowercased()
+        let actualHeaders = parseCSVRow(rows[0]).map { 
+            $0.trimmingCharacters(in: .init(charactersIn: "\u{FEFF}")).lowercased()
         }
         let actualHeaderSet = Set(actualHeaders)
         
@@ -127,23 +216,16 @@ class CSVImporter {
         let tIdx = actualHeaders.firstIndex(of: "type")!
         let uIdx = actualHeaders.firstIndex(of: "update")!
         
-        let dateFormatter = ISO8601DateFormatter()
-        let fallbackFormatter = DateFormatter()
-        fallbackFormatter.dateFormat = "yyyy-MM-dd"
-        
         for i in 1..<rows.count {
-            let cols = rows[i].components(separatedBy: ",").map { 
-                $0.replacingOccurrences(of: "\"", with: "")
-                  .trimmingCharacters(in: .whitespacesAndNewlines) 
-            }
-            guard cols.count == actualHeaders.count else { continue }
+            let cols = parseCSVRow(rows[i])
+            guard cols.count >= actualHeaders.count else { continue }
             
             guard let appId = Int64(cols[aIdx]) else { continue }
             let dateStr = cols[cIdx]
             let typeStr = cols[tIdx]
             var updateStr: String? = cols[uIdx].isEmpty ? nil : cols[uIdx]
             
-            let date = dateFormatter.date(from: dateStr) ?? fallbackFormatter.date(from: dateStr) ?? Date()
+            let date = parseDate(dateStr)
             let type = EventType(rawValue: typeStr) ?? .update
             
             var entry = LedgerEntry(
@@ -154,5 +236,6 @@ class CSVImporter {
             )
             try service.addLedgerEntry(&entry)
         }
+        try service.syncAutoIncrementSequences()
     }
 }

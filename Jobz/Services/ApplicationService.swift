@@ -84,4 +84,11 @@ class ApplicationService {
             try LedgerEntry.deleteAll(db, keys: Array(ids))
         }
     }
+    
+    func syncAutoIncrementSequences() throws {
+        try dbQueue.write { db in
+            try db.execute(sql: "UPDATE sqlite_sequence SET seq = COALESCE((SELECT MAX(application_id) FROM application), 0) WHERE name = 'application'")
+            try db.execute(sql: "UPDATE sqlite_sequence SET seq = COALESCE((SELECT MAX(ledger_id) FROM ledger), 0) WHERE name = 'ledger'")
+        }
+    }
 }
