@@ -1,6 +1,36 @@
-# Jobz 🚀
+<p align="center">
+  <img alt="Jobz App Icon" src="Jobz/Assets.xcassets/AppIcon.appiconset/app_icon_128x128.png" width="128" height="128" />
+</p>
 
-**Jobz** is a modern, native macOS application designed to track, analyze, and manage job applications, interviews, online assessments (OAs), and search metrics with SQLite querying and interactive charts.
+<h1 align="center">Jobz</h1>
+
+<p align="center">
+  <strong>A modern, native macOS toolkit to track, analyze, and query job applications.</strong><br>
+  Built with Swift, SwiftUI, and SQLite powered by GRDB.swift.
+</p>
+
+<p align="center">
+  <a href="https://developer.apple.com/swift/"><img alt="Swift 5.9+" src="https://img.shields.io/badge/swift-5.9+-orange.svg?style=flat"></a>
+  <a href="https://developer.apple.com/macos/"><img alt="macOS 14.0+" src="https://img.shields.io/badge/macOS-14.0+--Sonoma-blue.svg?style=flat"></a>
+  <a href="LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/license-MIT-green.svg?style=flat"></a>
+  <a href="https://github.com/groue/GRDB.swift"><img alt="GRDB.swift" src="https://img.shields.io/badge/SQLite-GRDB.swift-lightgrey.svg?style=flat"></a>
+</p>
+
+**Version Tracking**: [v1.0.0](CHANGELOG.md) • [CHANGELOG](CHANGELOG.md) • [ROADMAP](ROADMAP.md)
+
+**Requirements**: macOS 14.0+ (Sonoma) • Swift 5.9+ • Xcode 15.0+ • SQLite 3.20.0+ (via GRDB)
+
+---
+
+<p align="center">
+  <a href="#-key-features">Key Features</a> &bull;
+  <a href="#-requirements">Requirements</a> &bull;
+  <a href="#-architecture--tech-stack">Architecture</a> &bull;
+  <a href="#-how-to-use">How to Use</a> &bull;
+  <a href="#-ledger-data-model--philosophy">Data Model</a> &bull;
+  <a href="#-building--running">Building</a> &bull;
+  <a href="#-license--attributions">License</a>
+</p>
 
 ---
 
@@ -16,9 +46,21 @@
 - **SQL Lab**:
   - Execute custom SQL queries directly against the local SQLite database.
   - Table preview and tabular query results exportable to CSV.
+  - Persistent Saved & Named Query Library with one-click load & run.
 - **Snowflake-style CSV Data Export & Ingestion**:
   - Export SQLLab queries, application tables, ledger entries, and summary views to CSV with datetime-formatted filenames.
   - Single-transaction atomic CSV import for `applications.csv` and `ledger.csv`.
+
+---
+
+## 📋 Requirements
+
+| Requirement | Minimum Version | Notes |
+| :--- | :--- | :--- |
+| **Operating System** | macOS 14.0 (Sonoma) | Required for native SwiftUI Charts & `NavigationSplitView` features |
+| **Xcode** | Xcode 15.0+ | Required for building Swift 5.9 target schemas |
+| **Swift Toolchain** | Swift 5.9+ | Modern Swift concurrency & macro compatibility |
+| **Database** | SQLite 3.20.0+ | Managed automatically via [GRDB.swift](https://github.com/groue/GRDB.swift) (v6.29.3) |
 
 ---
 
@@ -94,10 +136,6 @@ Applications do not store a static status string. Instead, **Status View** dynam
 
 ## 🚀 Building & Running
 
-### Requirements
-- macOS 14.0+
-- Xcode 15.0+
-
 ### Build Command
 ```bash
 xcodebuild -project Jobz.xcodeproj -scheme Jobz build
@@ -122,4 +160,5 @@ For complete third-party license texts and copyright notices, please consult [`A
 
 ## AI Disclosure
 I don't know a lick of Swift. Sorry [SwiftCoderJoe](https://github.com/SwiftCoderJoe). In case the clearly vibecoded README hasn't made it obvious yet, this entire app is coded with Gemini + Antigravity, and the icons were also AI-generated.
+
 
