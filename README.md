@@ -120,3 +120,6 @@ This application incorporates open-source software libraries. We gratefully ackn
 
 For complete third-party license texts and copyright notices, please consult [`ACKNOWLEDGEMENTS.md`](ACKNOWLEDGEMENTS.md) or open the **About & Licenses** view directly in the application.
 
+## AI Disclosure
+I don't know a lick of Swift. Sorry [SwiftCoderJoe](https://github.com/SwiftCoderJoe). In case the clearly vibecoded README hasn't made it obvious yet, this entire app is coded with Gemini + Antigravity, and the icons were also AI-generated.
+
