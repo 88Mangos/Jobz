@@ -1,6 +1,6 @@
 # Features Left
 - [ ] Handling Images
-- [ ] Home Page Notes Dump
+- [x] Home Page Notes Dump
 - [ ] Exporting all User Data (also leads to easier backups)
 
 ## Handling Images 

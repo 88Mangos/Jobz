@@ -18,10 +18,12 @@ struct DashboardView: View {
                 }
                 
                 HStack {
-                        ApplicationsOverTimeChart(records: records)
+                    ApplicationsOverTimeChart(records: records)
                         .frame(maxWidth: .infinity)
                     Spacer()
                 }
+                
+                HomeNotesCard()
             }
             .padding()
         }
