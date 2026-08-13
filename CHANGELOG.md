@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- **SQL Lab Saved & Named Queries**: Added a persistent Saved Query Library to the SQL Lab tab with custom query naming, scrollable Presets & My Queries sections, one-click load & run, copy to clipboard with visual feedback, and query deletion.
 - **Expandable Timeline Notes**: Long ledger event updates are now truncated to 4 lines by default on the Summary detail view timeline, with a "Show More" / "Show Less" toggle for easier reading.
 - **"Online Assessment" => "Assessment"** retained `.oa` enum but changed how it renders 
 - **Assessment Received/Reminder Event Types**: Added an `Assessment Received` and `Assessment Reminder` event type to differentiate between receiving an assessment and actively completing one + emails that just tell me to complete an assessment
