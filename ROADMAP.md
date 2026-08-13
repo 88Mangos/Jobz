@@ -42,11 +42,12 @@ SQL view combining `application` and `ledger` to compute dynamic pipeline metric
 
 ---
 
-## 2. Analytics & Visuals (Swift Charts)
+## 2. Analytics, Visuals & Scratchpad
 
 1. **Status Breakdown Chart:** Bar chart representing unique applications by current derived status (`Accepted`, `Offered`, `Rejected`, `Interviewing`, `Pending`, `Ghosted`).
 2. **Applications Over Time:** Line/Area chart plotting application volume over time using `applied_at`.
 3. **Weekly Goal Donut Chart:** SectorMark donut chart displaying progress towards a target number of applications per week.
+4. **Home Page Notes Dump:** Persistent quick-access scratchpad (`HomeNotesCard`) on the Dashboard for unattached notes, code snippets (supporting Python triple-quoted docstrings), and Markdown formatting with copy and edit capabilities (backed by `AppStorage`).
 
 ---
 
@@ -73,10 +74,11 @@ Jobz/
 │
 ├── Views/
 │   ├── Dashboard/
-│   │   ├── DashboardView.swift     # 3-chart grid dashboard layout
+│   │   ├── DashboardView.swift     # Dashboard view layout
 │   │   ├── StatusBreakdownChart.swift
 │   │   ├── ApplicationsOverTimeChart.swift
-│   │   └── WeeklyGoalDonutChart.swift
+│   │   ├── WeeklyGoalDonutChart.swift
+│   │   └── HomeNotesCard.swift     # Persistent Markdown scratchpad & notes dump
 │   │
 │   ├── Summary/
 │   │   ├── SummaryTableView.swift        # Sortable spreadsheet view of application_status_view

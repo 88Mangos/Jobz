@@ -7,6 +7,7 @@
 - **App Category Configuration**: Configured `INFOPLIST_KEY_LSApplicationCategoryType` (`public.app-category.productivity`) in `project.pbxproj` build settings to resolve Xcode target category warnings.
 
 ### Added
+- **Home Page Notes Dump**: Added a persistent notes card (`HomeNotesCard`) to the Dashboard view with full Markdown rendering and monospaced edit mode for quick unattached notes, code snippets (supporting Python triple-quoted docstrings), one-click clipboard copying with visual feedback, and `AppStorage` persistence.
 - **SQL Lab Saved & Named Queries**: Added a persistent Saved Query Library to the SQL Lab tab with custom query naming, scrollable Presets & My Queries sections, one-click load & run, copy to clipboard with visual feedback, and query deletion.
 - **Expandable Timeline Notes**: Long ledger event updates are now truncated to 4 lines by default on the Summary detail view timeline, with a "Show More" / "Show Less" toggle for easier reading.
 - **"Online Assessment" => "Assessment"** retained `.oa` enum but changed how it renders 
