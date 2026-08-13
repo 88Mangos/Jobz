@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Added
+- **"Online Assessment" => "Assessment"** retained `.oa` enum but changed how it renders 
+- **Assessment Received/Reminder Event Types**: Added an `Assessment Received` and `Assessment Reminder` event type to differentiate between receiving an assessment and actively completing one + emails that just tell me to complete an assessment
+- **Chat Event Type**: Added a new `Chat` event type to the ledger with a distinct pink color indicator to differentiate informal networking chats from formal interviews.
 - **Dynamic Location Menu**: Supported adding custom locations dynamically in the Multi-select Location dropdown menu. Custom locations are saved to AppStorage.
 - **Application Location Editing**: Added inline editing for application location in the Summary detail view, leveraging the updated Multi-select Location dropdown menu.
 - **Ledger Event Editing**: Added `EditLedgerEventForm` to allow modifying existing ledger timeline events directly from the Summary detail view.

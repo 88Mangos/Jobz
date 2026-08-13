@@ -4,8 +4,11 @@ import GRDB
 
 enum EventType: String, Codable, CaseIterable, Identifiable {
     case applied = "Applied"
-    case oa = "Online Assessment"
+    case oa = "Assessment"
     case interview = "Interview"
+    case chat = "Chat"
+    case assessmentReceived = "Assessment Received"
+    case assessmentReminder = "Assessment Reminder"
     case update = "Update"
     case offer = "Offer"
     case rejection = "Rejection"
@@ -18,6 +21,9 @@ enum EventType: String, Codable, CaseIterable, Identifiable {
         case .applied: return .blue
         case .oa: return .purple
         case .interview: return .orange
+        case .chat: return .yellow
+        case .assessmentReminder: return .pink
+        case .assessmentReceived: return .indigo
         case .update: return .teal
         case .offer: return .mint
         case .rejection: return .red
