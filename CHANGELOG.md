@@ -9,6 +9,8 @@
 - **App Category Configuration**: Configured `INFOPLIST_KEY_LSApplicationCategoryType` (`public.app-category.productivity`) in `project.pbxproj` build settings to resolve Xcode target category warnings.
 
 ### Added
+- **Scratchpad Application Selector & Alphabetical Sorting**: Displayed the application ID next to company name in the Scratchpad application picker (`Company (ID: #) - Role`) to disambiguate multiple applications for the same company/role across seasons, and alphabetically sorted the dropdown options.
+- **Blank Scratchpad Timeline Logging**: Allowed saving events to the timeline from the Scratchpad without requiring notes (persisting `nil` update notes).
 - **Multi-Location Picker Component & Form Support**: Extracted `MultiSelectLocationMenu` into a standalone reusable component supporting multiple location selection, "Clear All", and dynamic custom location addition. Added `MultiSelectLocationMenu` to `NewApplicationForm` so users can choose multiple locations when creating a new application.
 - **Home Page Notes Dump**: Added a persistent notes card (`HomeNotesCard`) to the Dashboard view with full Markdown rendering and monospaced edit mode for quick unattached notes, code snippets (supporting Python triple-quoted docstrings), one-click clipboard copying with visual feedback, and `AppStorage` persistence.
 - **SQL Lab Saved & Named Queries**: Added a persistent Saved Query Library to the SQL Lab tab with custom query naming, scrollable Presets & My Queries sections, one-click load & run, copy to clipboard with visual feedback, and query deletion.

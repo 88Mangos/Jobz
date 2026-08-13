@@ -27,6 +27,18 @@ struct ScratchpadView: View {
         return zones
     }
     
+    private var sortedApplications: [ApplicationStatusRecord] {
+        applications.sorted {
+            if $0.companyName.localizedCaseInsensitiveCompare($1.companyName) == .orderedSame {
+                if $0.role.localizedCaseInsensitiveCompare($1.role) == .orderedSame {
+                    return $0.applicationId < $1.applicationId
+                }
+                return $0.role.localizedCaseInsensitiveCompare($1.role) == .orderedAscending
+            }
+            return $0.companyName.localizedCaseInsensitiveCompare($1.companyName) == .orderedAscending
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Header Bar
@@ -34,12 +46,12 @@ struct ScratchpadView: View {
                 HStack(spacing: 16) {
                     Picker("Application", selection: $selectedApplicationId) {
                         Text("Select Application").tag(Int64?.none)
-                        ForEach(applications) { app in
-                            Text("\(app.companyName) - \(app.role)").tag(Int64?.some(app.applicationId))
+                        ForEach(sortedApplications) { app in
+                            Text("\(app.companyName) (ID: \(app.applicationId)) - \(app.role)").tag(Int64?.some(app.applicationId))
                         }
                     }
                     .pickerStyle(.menu)
-                    .frame(width: 250)
+                    .frame(width: 280)
                     
                     Picker("Event Type", selection: $type) {
                         ForEach(EventType.allCases) { t in
@@ -64,7 +76,7 @@ struct ScratchpadView: View {
                         Label("Save to Timeline", systemImage: "square.and.arrow.down")
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(selectedApplicationId == nil || notes.isEmpty)
+                    .disabled(selectedApplicationId == nil)
                 }
                 
                 if selectedApplicationId != nil {
@@ -183,7 +195,7 @@ struct ScratchpadView: View {
             createdAt: date,
             type: type,
             applicationId: appId,
-            update: notes,
+            update: notes.isEmpty ? nil : notes,
             timezone: timezone
         )
         
