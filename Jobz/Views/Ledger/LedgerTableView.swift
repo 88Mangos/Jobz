@@ -11,12 +11,12 @@ struct LedgerTableView: View {
     @State private var isGrouped = false
     
     @State private var isImporting = false
-    @State private var selection = Set<LedgerEntry.ID>()
+    @State private var selection = Set<Int64>()
     
     @State private var csvError: String? = nil
     @State private var showCSVError = false
     @State private var showDeleteConfirmation = false
-    @State private var sortOrder = [KeyPathComparator(\LedgerEntry.createdAt, order: .reverse)]
+    @State private var sortOrder = [KeyPathComparator(\LedgerTableRow.entry.createdAt, order: .reverse)]
     @State private var isEditing = false
     
     @State private var newLedgerAppId = ""
@@ -52,11 +52,22 @@ struct LedgerTableView: View {
                 }
                 return $0.applicationId < $1.applicationId
             }
-        } else {
-            result.sort(using: sortOrder)
         }
         
         return result
+    }
+    
+    struct LedgerTableRow: Identifiable {
+        let id: Int64
+        var entry: LedgerEntry
+    }
+    
+    var tableRows: [LedgerTableRow] {
+        var rows = filteredAndSortedEntries.map { LedgerTableRow(id: $0.id, entry: $0) }
+        if !isGrouped {
+            rows.sort(using: sortOrder)
+        }
+        return rows
     }
     
     var body: some View {
@@ -118,12 +129,13 @@ struct LedgerTableView: View {
                 .padding([.horizontal, .bottom])
             }
             
-            Table(filteredAndSortedEntries, selection: $selection, sortOrder: $sortOrder) {
-                TableColumn("ID", value: \.sortId) { entry in
-                    Text("\(entry.id ?? 0)")
+            Table(tableRows, selection: $selection, sortOrder: $sortOrder) {
+                TableColumn("ID", value: \.id) { row in
+                    Text("\(row.id)")
                 }
                 .width(min: 30, max: 50)
-                TableColumn("Created At", value: \.createdAt) { entry in
+                TableColumn("Created At", value: \.entry.createdAt) { row in
+                    let entry = row.entry
                     if isEditing {
                         DatePicker("", selection: Binding(
                             get: { entry.createdAt },
@@ -137,7 +149,8 @@ struct LedgerTableView: View {
                     }
                 }
                 .width(min: 150, ideal: 180, max: 250)
-                TableColumn("Timezone") { entry in
+                TableColumn("Timezone") { row in
+                    let entry = row.entry
                     if isEditing {
                         Picker("", selection: Binding(
                             get: { entry.timezone ?? "America/New_York" },
@@ -157,7 +170,8 @@ struct LedgerTableView: View {
                     }
                 }
                 .width(min: 220, ideal: 250, max: 300)
-                TableColumn("Type", value: \.type.rawValue) { entry in
+                TableColumn("Type", value: \.entry.type.rawValue) { row in
+                    let entry = row.entry
                     if isEditing {
                         Picker("", selection: Binding(
                             get: { entry.type },
@@ -173,7 +187,8 @@ struct LedgerTableView: View {
                     }
                 }
                 .width(min: 120, max: 150)
-                TableColumn("Application", value: \.applicationId) { entry in
+                TableColumn("Application", value: \.entry.applicationId) { row in
+                    let entry = row.entry
                     if isEditing {
                         VStack(alignment: .leading, spacing: 2) {
                             TextField("App ID", value: Binding(
@@ -196,14 +211,16 @@ struct LedgerTableView: View {
                     }
                 }
                 .width(min: 150, ideal: 200, max: 250)
-                TableColumn("Notes", value: \.sortUpdate) { entry in
+                TableColumn("Notes", value: \.entry.sortUpdate) { row in
+                    let entry = row.entry
                     if isEditing {
                         TextField("Notes", text: Binding(
                             get: { entry.update ?? "" },
                             set: { newValue in updateEntry(entry, newUpdate: newValue) }
                         ))
                     } else {
-                        Text(entry.update ?? "")
+                        Text(entry.sortUpdate)
+                            .lineLimit(1)
                     }
                 }
             }
@@ -335,8 +352,7 @@ struct LedgerTableView: View {
     
     private func deleteSelected() {
         do {
-            let validIds = Set(selection.compactMap { $0 })
-            try applicationService.deleteLedgerEntries(ids: validIds)
+            try applicationService.deleteLedgerEntries(ids: selection)
             selection.removeAll()
             loadData()
         } catch {
@@ -361,9 +377,10 @@ struct LedgerTableView: View {
         let headers = ["ledger_id", "created_at", "type", "application_id", "update", "timezone"]
         
         let formatter = ISO8601DateFormatter()
-        let rows = filteredAndSortedEntries.map { entry in
-            [
-                entry.id.map(String.init) ?? "",
+        let rows = tableRows.map { row in
+            let entry = row.entry
+            return [
+                String(entry.id),
                 formatter.string(from: entry.createdAt),
                 entry.type.rawValue,
                 String(entry.applicationId),

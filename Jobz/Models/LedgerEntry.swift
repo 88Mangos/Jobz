@@ -33,7 +33,8 @@ enum EventType: String, Codable, CaseIterable, Identifiable {
 }
 
 struct LedgerEntry: Codable, FetchableRecord, MutablePersistableRecord, Identifiable {
-    var id: Int64?
+    var ledgerId: Int64?
+    var id: Int64 { ledgerId ?? 0 }
     var createdAt: Date
     var type: EventType
     var applicationId: Int64
@@ -46,12 +47,22 @@ struct LedgerEntry: Codable, FetchableRecord, MutablePersistableRecord, Identifi
         return createdAt.addingTimeInterval(TimeInterval(-offset))
     }
     
-    var sortUpdate: String { update ?? "" }
-    var sortId: Int64 { id ?? 0 }
+    var sortUpdate: String {
+        let clean = (update ?? "").replacingOccurrences(of: "\n", with: " ")
+        if clean.count > 100 {
+            return String(clean.prefix(100)) + "..."
+        }
+        return clean
+    }
+    var sortId: Int64 { id }
     static let databaseTableName = "ledger"
+    
+    mutating func didInsert(with rowID: Int64, for column: String?) {
+        ledgerId = rowID
+    }
 
     enum CodingKeys: String, CodingKey {
-        case id = "ledger_id"
+        case ledgerId = "ledger_id"
         case createdAt = "created_at"
         case type
         case applicationId = "application_id"
