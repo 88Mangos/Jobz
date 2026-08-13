@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- **Expandable Timeline Notes**: Long ledger event updates are now truncated to 4 lines by default on the Summary detail view timeline, with a "Show More" / "Show Less" toggle for easier reading.
 - **"Online Assessment" => "Assessment"** retained `.oa` enum but changed how it renders 
 - **Assessment Received/Reminder Event Types**: Added an `Assessment Received` and `Assessment Reminder` event type to differentiate between receiving an assessment and actively completing one + emails that just tell me to complete an assessment
 - **Chat Event Type**: Added a new `Chat` event type to the ledger with a distinct pink color indicator to differentiate informal networking chats from formal interviews.

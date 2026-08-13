@@ -166,8 +166,7 @@ struct SummaryDetailView: View {
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                         if let update = entry.update, !update.isEmpty {
-                                            Text(update)
-                                                .font(.body)
+                                            ExpandableEventNote(text: update)
                                                 .padding(.top, 2)
                                         }
                                     }
@@ -265,5 +264,31 @@ struct SummaryDetailView: View {
         }
         
         return role
+    }
+}
+
+struct ExpandableEventNote: View {
+    let text: String
+    @State private var isExpanded = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(text)
+                .font(.body)
+                .lineLimit(isExpanded ? nil : 4)
+            
+            if text.count > 150 || text.filter({ $0 == "\n" }).count >= 4 {
+                Button(action: {
+                    withAnimation {
+                        isExpanded.toggle()
+                    }
+                }) {
+                    Text(isExpanded ? "Show Less" : "Show More")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 }
