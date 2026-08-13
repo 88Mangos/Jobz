@@ -113,6 +113,10 @@ struct AppDatabase {
             }
         }
         
+        migrator.registerMigration("v4_revert_assessment") { db in
+            try db.execute(sql: "UPDATE ledger SET type = 'Online Assessment' WHERE type = 'Assessment'")
+        }
+        
         try migrator.migrate(dbQueue)
     }
 }

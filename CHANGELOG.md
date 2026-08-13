@@ -50,3 +50,4 @@
 - **Navigation Back Stack**: Wrapped the detail view inside `ContentView` in a `NavigationStack` so that pushing to the `ApplicationDetailView` correctly provides a "< Back" button.
 - **Applications Over Time Chart Grouping**: Refactored `ApplicationsOverTimeChart` to aggregate applications by week starting on Sunday rather than by hour/day.
 - **CSV Import Ledger Creation**: Updated CSV import to skip auto-generating "Applied" ledger entries so imports act strictly as manual data overrides.
+- **Online Assessment Ledger Decoding**: Reverted Enum value for Online Assessment back to `.oa = "Online Assessment"` and added a `v4_revert_assessment` migration to repair corrupted database records. This properly fixes a decoding bug where the Ledger tab would fail to render any rows.

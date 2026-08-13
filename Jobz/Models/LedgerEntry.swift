@@ -4,7 +4,7 @@ import GRDB
 
 enum EventType: String, Codable, CaseIterable, Identifiable {
     case applied = "Applied"
-    case oa = "Assessment"
+    case oa = "Online Assessment"
     case interview = "Interview"
     case chat = "Chat"
     case assessmentReceived = "Assessment Received"
