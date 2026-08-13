@@ -6,7 +6,7 @@ struct NewApplicationForm: View {
     
     @State private var companyName = ""
     @State private var role = ""
-    @State private var location = ""
+    @State private var location: String? = nil
     @State private var date = Date()
     
     private let applicationService = ApplicationService()
@@ -16,7 +16,11 @@ struct NewApplicationForm: View {
             Form {
                 TextField("Company Name", text: $companyName)
                 TextField("Role", text: $role)
-                TextField("Location", text: $location)
+                HStack {
+                    Text("Location")
+                    Spacer()
+                    MultiSelectLocationMenu(selectedLocationsStr: $location)
+                }
                 DatePicker("Applied Date", selection: $date, displayedComponents: .date)
             }
             .padding()

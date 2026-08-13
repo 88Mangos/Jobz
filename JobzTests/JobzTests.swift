@@ -82,5 +82,62 @@ final class JobzTests: XCTestCase {
         XCTAssertEqual(parsedRows[1], originalRows[0])
         XCTAssertEqual(parsedRows[2], originalRows[1])
     }
+
+    func testLocationParserParsing() throws {
+        let defaultOptions = [
+            "Remote",
+            "San Francisco, CA",
+            "New York, NY",
+            "Seattle, WA",
+            "Austin, TX",
+            "Boston, MA",
+            "Los Angeles, CA",
+            "Chicago, IL"
+        ]
+        
+        // Nil and empty
+        XCTAssertEqual(LocationParser.parseLocations(from: nil), [])
+        XCTAssertEqual(LocationParser.parseLocations(from: ""), [])
+        XCTAssertEqual(LocationParser.parseLocations(from: "   "), [])
+        
+        // Single location with comma inside (city, state)
+        let single = LocationParser.parseLocations(from: "San Francisco, CA", knownOptions: defaultOptions)
+        XCTAssertEqual(single, ["San Francisco, CA"])
+        
+        // Multiple locations semicolon separated
+        let semi = LocationParser.parseLocations(from: "San Francisco, CA; New York, NY; Remote", knownOptions: defaultOptions)
+        XCTAssertEqual(semi, ["San Francisco, CA", "New York, NY", "Remote"])
+        
+        // Multiple locations slash separated
+        let slash = LocationParser.parseLocations(from: "Mountain View, CA / Remote", knownOptions: defaultOptions)
+        XCTAssertEqual(slash, ["Mountain View, CA", "Remote"])
+        
+        // Multiple locations comma separated using known options
+        let comma = LocationParser.parseLocations(from: "San Francisco, CA, New York, NY, Austin, TX", knownOptions: defaultOptions)
+        XCTAssertEqual(comma, ["San Francisco, CA", "New York, NY", "Austin, TX"])
+        
+        // Custom location with default options
+        let customWithKnown = LocationParser.parseLocations(from: "London, UK; Remote", knownOptions: defaultOptions)
+        XCTAssertEqual(customWithKnown, ["London, UK", "Remote"])
+    }
+
+    func testLocationParserFormatting() throws {
+        let options = ["Remote", "San Francisco, CA", "New York, NY", "Seattle, WA"]
+        
+        // Empty set
+        XCTAssertNil(LocationParser.formatLocations([], sortedBy: options))
+        
+        // Single location
+        let singleResult = LocationParser.formatLocations(["San Francisco, CA"], sortedBy: options)
+        XCTAssertEqual(singleResult, "San Francisco, CA")
+        
+        // Multiple locations preserve option order
+        let multiResult = LocationParser.formatLocations(["New York, NY", "Remote", "San Francisco, CA"], sortedBy: options)
+        XCTAssertEqual(multiResult, "Remote; San Francisco, CA; New York, NY")
+        
+        // Custom location appended
+        let customResult = LocationParser.formatLocations(["Remote", "London, UK"], sortedBy: options)
+        XCTAssertEqual(customResult, "Remote; London, UK")
+    }
 }
 
