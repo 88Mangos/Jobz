@@ -19,26 +19,96 @@ class CSVImporter {
     
     private static let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.date.rawValue)
     
-    static func parseCSVRow(_ line: String) -> [String] {
-        var result: [String] = []
-        var current = ""
-        var insideQuotes = false
+    static func parseCSV(_ content: String) -> [[String]] {
+        var text = content
+        if text.hasPrefix("\u{FEFF}") {
+            text.removeFirst()
+        }
         
-        for char in line {
-            if char == "\"" {
-                insideQuotes.toggle()
-            } else if char == "," && !insideQuotes {
-                result.append(current)
-                current = ""
+        var rows: [[String]] = []
+        var currentRow: [String] = []
+        var currentField = ""
+        var insideQuotes = false
+        var isStartOfField = true
+        
+        let scalars = Array(text.unicodeScalars)
+        let count = scalars.count
+        var index = 0
+        
+        while index < count {
+            let scalar = scalars[index]
+            
+            if isStartOfField {
+                if scalar == "\"" {
+                    insideQuotes = true
+                    isStartOfField = false
+                    index += 1
+                    continue
+                } else {
+                    insideQuotes = false
+                    isStartOfField = false
+                }
+            }
+            
+            if insideQuotes {
+                if scalar == "\"" {
+                    if index + 1 < count && scalars[index + 1] == "\"" {
+                        currentField.append("\"")
+                        index += 2
+                    } else {
+                        insideQuotes = false
+                        index += 1
+                    }
+                } else {
+                    currentField.append(Character(scalar))
+                    index += 1
+                }
             } else {
-                current.append(char)
+                if scalar == "," {
+                    currentRow.append(currentField)
+                    currentField = ""
+                    isStartOfField = true
+                    index += 1
+                } else if scalar == "\r" {
+                    currentRow.append(currentField)
+                    currentField = ""
+                    rows.append(currentRow)
+                    currentRow = []
+                    isStartOfField = true
+                    
+                    if index + 1 < count && scalars[index + 1] == "\n" {
+                        index += 2
+                    } else {
+                        index += 1
+                    }
+                } else if scalar == "\n" {
+                    currentRow.append(currentField)
+                    currentField = ""
+                    rows.append(currentRow)
+                    currentRow = []
+                    isStartOfField = true
+                    index += 1
+                } else {
+                    currentField.append(Character(scalar))
+                    index += 1
+                }
             }
         }
-        result.append(current)
-        return result.map { 
-            $0.replacingOccurrences(of: "\"", with: "")
-              .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if !currentField.isEmpty || !currentRow.isEmpty || !isStartOfField {
+            currentRow.append(currentField)
+            rows.append(currentRow)
         }
+        
+        if let lastRow = rows.last, lastRow.count == 1 && lastRow[0].isEmpty {
+            rows.removeLast()
+        }
+        
+        return rows
+    }
+    
+    static func parseCSVRow(_ line: String) -> [String] {
+        return parseCSV(line).first ?? []
     }
     
     private static func fixTwoDigitYear(_ date: Date) -> Date {
@@ -121,14 +191,13 @@ class CSVImporter {
         defer { url.stopAccessingSecurityScopedResource() }
         
         let content = try String(contentsOf: url, encoding: .utf8)
-        let rows = content.components(separatedBy: .newlines)
-                          .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let rows = parseCSV(content)
         
         guard rows.count > 0 else { return }
         
         let expectedHeaders = Set(["company_name", "role", "duration", "season", "location", "notes"])
-        let actualHeaders = parseCSVRow(rows[0]).map { 
-            $0.trimmingCharacters(in: .init(charactersIn: "\u{FEFF}")).lowercased()
+        let actualHeaders = rows[0].map { 
+            $0.trimmingCharacters(in: .init(charactersIn: "\u{FEFF}\r\n ")).lowercased()
         }
         let actualHeaderSet = Set(actualHeaders)
         
@@ -152,26 +221,34 @@ class CSVImporter {
         let nIdx = actualHeaders.firstIndex(of: "notes")!
         
         for i in 1..<rows.count {
-            let cols = parseCSVRow(rows[i])
-            guard cols.count >= actualHeaders.count else { continue }
-            
-            let duration: String? = cols[dIdx].isEmpty ? nil : cols[dIdx]
-            let season: String? = cols[sIdx].isEmpty ? nil : cols[sIdx]
-            let location: String? = cols[lIdx].isEmpty ? nil : cols[lIdx]
-            let notes: String? = cols[nIdx].isEmpty ? nil : cols[nIdx]
-            var roleExtraNotes: String? = nil
-            if let rn = rnIdx, rn < cols.count {
-                roleExtraNotes = cols[rn].isEmpty ? nil : cols[rn]
+            let cols = rows[i]
+            if cols.allSatisfy({ $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
+                continue
             }
+            
+            func getCol(_ idx: Int?) -> String? {
+                guard let idx = idx, idx < cols.count else { return nil }
+                let trimmed = cols[idx].trimmingCharacters(in: .whitespacesAndNewlines)
+                return trimmed.isEmpty ? nil : cols[idx]
+            }
+            
+            let companyName = getCol(cIdx) ?? ""
+            let role = getCol(rIdx) ?? ""
+            let roleExtraNotes = getCol(rnIdx)
+            let duration = getCol(dIdx)
+            let season = getCol(sIdx)
+            let location = getCol(lIdx)
+            let notes = getCol(nIdx)
+            
             var appId: Int64? = nil
-            if let a = aIdx, a < cols.count, let parsedId = Int64(cols[a]) {
+            if let aStr = getCol(aIdx), let parsedId = Int64(aStr) {
                 appId = parsedId
             }
             
             var app = JobApplication(
                 id: appId,
-                companyName: cols[cIdx],
-                role: cols[rIdx],
+                companyName: companyName,
+                role: role,
                 roleExtraNotes: roleExtraNotes,
                 duration: duration,
                 season: season,
@@ -190,14 +267,13 @@ class CSVImporter {
         defer { url.stopAccessingSecurityScopedResource() }
         
         let content = try String(contentsOf: url, encoding: .utf8)
-        let rows = content.components(separatedBy: .newlines)
-                          .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let rows = parseCSV(content)
         
         guard rows.count > 0 else { return }
         
         let expectedHeaders = Set(["application_id", "created_at", "type", "update"])
-        let actualHeaders = parseCSVRow(rows[0]).map { 
-            $0.trimmingCharacters(in: .init(charactersIn: "\u{FEFF}")).lowercased()
+        let actualHeaders = rows[0].map { 
+            $0.trimmingCharacters(in: .init(charactersIn: "\u{FEFF}\r\n ")).lowercased()
         }
         let actualHeaderSet = Set(actualHeaders)
         
@@ -218,20 +294,25 @@ class CSVImporter {
         let tzIdx = actualHeaders.firstIndex(of: "timezone")
         
         for i in 1..<rows.count {
-            let cols = parseCSVRow(rows[i])
-            guard cols.count >= actualHeaders.count else { continue }
+            let cols = rows[i]
+            if cols.allSatisfy({ $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
+                continue
+            }
             
-            guard let appId = Int64(cols[aIdx]) else { continue }
-            let dateStr = cols[cIdx]
-            let typeStr = cols[tIdx]
-            let updateStr: String? = cols[uIdx].isEmpty ? nil : cols[uIdx]
+            func getCol(_ idx: Int?) -> String? {
+                guard let idx = idx, idx < cols.count else { return nil }
+                let trimmed = cols[idx].trimmingCharacters(in: .whitespacesAndNewlines)
+                return trimmed.isEmpty ? nil : cols[idx]
+            }
+            
+            guard let aStr = getCol(aIdx), let appId = Int64(aStr) else { continue }
+            guard let dateStr = getCol(cIdx) else { continue }
+            let typeStr = getCol(tIdx) ?? "Update"
+            let updateStr = getCol(uIdx)
+            let timezoneStr = getCol(tzIdx)
             
             let date = parseDate(dateStr)
             let type = EventType(rawValue: typeStr) ?? .update
-            var timezoneStr: String? = nil
-            if let tzIdx = tzIdx, tzIdx < cols.count {
-                timezoneStr = cols[tzIdx].isEmpty ? nil : cols[tzIdx]
-            }
             
             var entry = LedgerEntry(
                 createdAt: date,

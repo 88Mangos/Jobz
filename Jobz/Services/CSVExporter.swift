@@ -22,7 +22,7 @@ class CSVExporter {
     }
     
     /// Formats a single field according to CSV standards.
-    private static func formatField(_ field: String) -> String {
+    static func formatField(_ field: String) -> String {
         var formatted = field
         
         // If the field contains quotes, escape them by doubling
