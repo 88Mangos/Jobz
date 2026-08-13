@@ -1,5 +1,6 @@
 import SwiftUI
 import GRDB
+import Textual
 
 struct ScratchpadView: View {
     @State private var applications: [ApplicationStatusRecord] = []
@@ -134,8 +135,9 @@ struct ScratchpadView: View {
                     
                     ScrollView {
                         VStack(alignment: .leading) {
-                            Text(markdownText)
+                            StructuredText(markdown: notes)
                                 .frame(maxWidth: .infinity, alignment: .leading)
+                                .textual.textSelection(.enabled)
                                 .padding()
                         }
                     }
@@ -153,12 +155,6 @@ struct ScratchpadView: View {
         }
     }
     
-    private var markdownText: AttributedString {
-        if let attrStr = try? AttributedString(markdown: notes, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .full)) {
-            return attrStr
-        }
-        return AttributedString(notes)
-    }
     
     private func loadApplications() {
         do {

@@ -156,6 +156,11 @@ This application incorporates open-source software libraries. We gratefully ackn
   - **License**: [MIT License](https://github.com/groue/GRDB.swift/blob/master/LICENSE)
   - **Notice**: Copyright (C) 2015-2025 Gwendal Roué
 
+- **[Textual](https://github.com/gonzalezreal/textual)**
+  - **Author**: Guillermo González ([@gonzalezreal](https://github.com/gonzalezreal))
+  - **License**: [MIT License](https://github.com/gonzalezreal/textual/blob/main/LICENSE)
+  - **Notice**: Copyright (C) 2025 Guillermo González
+
 For complete third-party license texts and copyright notices, please consult [`ACKNOWLEDGEMENTS.md`](ACKNOWLEDGEMENTS.md) or open the **About & Licenses** view directly in the application.
 
 ## AI Disclosure

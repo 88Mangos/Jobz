@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Textual
 
 struct HomeNotesCard: View {
     @AppStorage("homePageNotesDump") private var notes: String = ""
@@ -105,10 +106,9 @@ struct HomeNotesCard: View {
                     .padding(.vertical, 16)
                 } else {
                     ScrollView(.vertical) {
-                        Text(markdownText)
-                            .font(.body)
+                        StructuredText(markdown: notes)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .textSelection(.enabled)
+                            .textual.textSelection(.enabled)
                             .padding(8)
                     }
                     .frame(minHeight: 120, maxHeight: 300)
@@ -130,12 +130,6 @@ struct HomeNotesCard: View {
         )
     }
     
-    private var markdownText: AttributedString {
-        if let attrStr = try? AttributedString(markdown: notes, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .full)) {
-            return attrStr
-        }
-        return AttributedString(notes)
-    }
     
     private func copyToClipboard() {
         let pasteboard = NSPasteboard.general
