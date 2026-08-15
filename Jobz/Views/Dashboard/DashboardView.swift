@@ -14,7 +14,7 @@ struct DashboardView: View {
                 }
                 
                 HStack {
-                    ApplicationsOverTimeChart(records: records)
+                    ApplicationsOverTimeChart()
                         .frame(maxWidth: .infinity)
                     Spacer()
                 }

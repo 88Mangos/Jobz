@@ -10,6 +10,8 @@
 
 ### Added
 - Efficient GRDB query in `MetricsService` (`fetchTimeSeriesData`) to fetch time-series data for applications, interviews, and online assessments by week.
+- **Interactive Dashboard Line Chart**: Rewrote `ApplicationsOverTimeChart` to include hoverable data points, toggles for "Applications", "Interviews", and "OAs", and a dynamic Date Range Picker.
+- Added an auto-generated SQLite tooltip string under the line chart to display the executed SQL query for educational transparency.
 
 
 - **Multi-Select Spreadsheet Filtering**: Replaced global text search with per-column, multiple-selectable dropdown filters in the Applications, Ledger, and Summary spreadsheet views, enabling complex queries (e.g., "only include MLE and DS roles for Summer 2025").
