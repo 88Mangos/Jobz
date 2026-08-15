@@ -10,6 +10,7 @@ struct ContentView: View {
         case ledger
         case scratchpad
         case sqlLab
+        case quickAdd
         case about
     }
     
@@ -31,6 +32,9 @@ struct ContentView: View {
                     }
                     NavigationLink(value: SidebarItem.scratchpad) {
                         Label("Scratchpad", systemImage: "square.and.pencil")
+                    }
+                    NavigationLink(value: SidebarItem.quickAdd) {
+                        Label("Quick Add", systemImage: "plus")
                     }
                     NavigationLink(value: SidebarItem.sqlLab) {
                         Label("SQL Lab", systemImage: "server.rack")
@@ -57,6 +61,8 @@ struct ContentView: View {
                     LedgerTableView()
                 case .scratchpad:
                     ScratchpadView()
+                case .quickAdd:
+                    QuickAddView()
                 case .sqlLab:
                     SQLLabView()
                 case .about:
