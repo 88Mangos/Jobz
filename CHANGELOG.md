@@ -8,6 +8,8 @@
 - **RFC 4180 CSV Export/Import Roundtripping**: Fixed CSV parsing in `CSVImporter` to process streams character-by-character per RFC 4180. Preserves multiline notes, unescapes double quotes (`""`), and correctly handles commas within quoted fields so exported data can be re-imported perfectly regardless of content size or complex formatting.
 - **App Category Configuration**: Configured `INFOPLIST_KEY_LSApplicationCategoryType` (`public.app-category.productivity`) in `project.pbxproj` build settings to resolve Xcode target category warnings.
 - **Metrics Time-Series Statement Arguments**: Fixed optional unwrapping of `StatementArguments` in `MetricsService.fetchTimeSeriesData` to resolve compilation failure.
+- **Dashboard Chart AreaMark Stacking**: Fixed an issue where Dashboard Chart rendered AreaMarks stacked on top of each other improperly. Independent metric sequences are now drawn flawlessly without unintended stacking behavior.
+- **Dashboard Hover UI Shift**: Fixed a layout shift in the dashboard hover info box by implementing a fixed-size layout using placeholder values.
 
 ### Changed
 - Dashboard Line Chart date filters are now optional and inactive by default, with a "Reset" button to clear the date bounds.
