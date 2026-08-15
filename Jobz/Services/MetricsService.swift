@@ -56,7 +56,7 @@ class MetricsService {
             ORDER BY week_start ASC
             """
             
-            return try TimeSeriesDataPoint.fetchAll(db, sql: sql, arguments: StatementArguments(arguments))
+            return try TimeSeriesDataPoint.fetchAll(db, sql: sql, arguments: StatementArguments(arguments) ?? StatementArguments())
         }
     }
 }

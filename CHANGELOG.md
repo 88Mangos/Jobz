@@ -7,6 +7,7 @@
 - **Multi-Location Selection & Parsing**: Fixed a parsing bug where multi-select location strings split on `", "` broke city/state pairs (e.g. `"San Francisco, CA"`), causing checkmarks to disappear and selections to be dropped. Introduced `LocationParser` to robustly handle city/state formatting, semicolon separators (`"; "`), slash separators (`" / "`), and legacy comma lists.
 - **RFC 4180 CSV Export/Import Roundtripping**: Fixed CSV parsing in `CSVImporter` to process streams character-by-character per RFC 4180. Preserves multiline notes, unescapes double quotes (`""`), and correctly handles commas within quoted fields so exported data can be re-imported perfectly regardless of content size or complex formatting.
 - **App Category Configuration**: Configured `INFOPLIST_KEY_LSApplicationCategoryType` (`public.app-category.productivity`) in `project.pbxproj` build settings to resolve Xcode target category warnings.
+- **Metrics Time-Series Statement Arguments**: Fixed optional unwrapping of `StatementArguments` in `MetricsService.fetchTimeSeriesData` to resolve compilation failure.
 
 ### Added
 - Efficient GRDB query in `MetricsService` (`fetchTimeSeriesData`) to fetch time-series data for applications, interviews, and online assessments by week.
