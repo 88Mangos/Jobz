@@ -14,6 +14,7 @@ struct ApplicationTableView: View {
     @State private var showDeleteConfirmation = false
     @State private var sortOrder = [KeyPathComparator(\JobApplication.companyName)]
     @State private var isEditing = false
+    @State private var searchText = ""
     
     @State private var newAppId = ""
     @State private var newAppCompany = ""
@@ -22,7 +23,16 @@ struct ApplicationTableView: View {
     @State private var newAppLocation: String? = nil
     
     var sortedApplications: [JobApplication] {
-        applications.sorted(using: sortOrder)
+        let filtered = searchText.isEmpty ? applications : applications.filter { app in
+            app.companyName.localizedCaseInsensitiveContains(searchText) ||
+            app.role.localizedCaseInsensitiveContains(searchText) ||
+            (app.season ?? "").localizedCaseInsensitiveContains(searchText) ||
+            (app.location ?? "").localizedCaseInsensitiveContains(searchText) ||
+            (app.duration ?? "").localizedCaseInsensitiveContains(searchText) ||
+            (app.notes ?? "").localizedCaseInsensitiveContains(searchText) ||
+            (app.roleExtraNotes ?? "").localizedCaseInsensitiveContains(searchText)
+        }
+        return filtered.sorted(using: sortOrder)
     }
     
     var body: some View {
@@ -164,6 +174,7 @@ struct ApplicationTableView: View {
             }
         }
         .navigationTitle("Applications")
+        .searchable(text: $searchText, prompt: "Filter applications...")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Toggle(isOn: $isEditing) {

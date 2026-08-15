@@ -18,6 +18,7 @@ struct LedgerTableView: View {
     @State private var showDeleteConfirmation = false
     @State private var sortOrder = [KeyPathComparator(\LedgerTableRow.entry.createdAt, order: .reverse)]
     @State private var isEditing = false
+    @State private var searchText = ""
     
     @State private var newLedgerAppId = ""
     @State private var newLedgerType: EventType = .applied
@@ -43,6 +44,14 @@ struct LedgerTableView: View {
         
         if let appId = selectedApplicationId {
             result = result.filter { $0.applicationId == appId }
+        }
+        
+        if !searchText.isEmpty {
+            result = result.filter { entry in
+                entry.type.rawValue.localizedCaseInsensitiveContains(searchText) ||
+                (entry.update ?? "").localizedCaseInsensitiveContains(searchText) ||
+                appDetails(for: entry.applicationId).localizedCaseInsensitiveContains(searchText)
+            }
         }
         
         if isGrouped {
@@ -226,6 +235,7 @@ struct LedgerTableView: View {
             }
         }
         .navigationTitle("Ledger")
+        .searchable(text: $searchText, prompt: "Filter ledger events...")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Toggle(isOn: $isEditing) {
