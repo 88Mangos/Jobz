@@ -9,6 +9,9 @@
 - **App Category Configuration**: Configured `INFOPLIST_KEY_LSApplicationCategoryType` (`public.app-category.productivity`) in `project.pbxproj` build settings to resolve Xcode target category warnings.
 
 ### Added
+- Efficient GRDB query in `MetricsService` (`fetchTimeSeriesData`) to fetch time-series data for applications, interviews, and online assessments by week.
+
+
 - **Multi-Select Spreadsheet Filtering**: Replaced global text search with per-column, multiple-selectable dropdown filters in the Applications, Ledger, and Summary spreadsheet views, enabling complex queries (e.g., "only include MLE and DS roles for Summer 2025").
 - **Musings Tab**: Added a dedicated `MusingsView` tab for unstructured thoughts, utilizing `UserDefaults` and Markdown rendering to keep a single, globally accessible scratchpad outside of specific job applications.
 - **Summary Table Inspector**: Replaced the `NavigationSplitView` in `SummaryTableView` with a collapsible `.inspector()` modifier. The detail pane containing the application's timeline and info is now collapsed by default and only appears when a specific application row is selected.
