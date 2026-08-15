@@ -1,8 +1,27 @@
 import SwiftUI
 
 struct QuickAddView: View {
-    @State private var companyName = ""
-    @State private var role = ""
+    @State private var existingCompanies: [String] = []
+    @State private var existingRoles: [String] = []
+    @State private var existingSeasons: [String] = []
+    @State private var existingLocations: [String] = []
+    
+    @State private var selectedCompany = "__ADD_NEW__"
+    @State private var newCompany = ""
+    
+    @State private var selectedRole = "__ADD_NEW__"
+    @State private var newRole = ""
+    
+    @State private var roleExtraNotes = ""
+    
+    @State private var selectedSeason = "__ADD_NEW__"
+    @State private var newSeason = ""
+    
+    @State private var duration = ""
+    
+    @State private var selectedLocations = Set<String>()
+    @State private var newLocation = ""
+    
     @State private var notes = ""
     @State private var date = Date()
     @State private var showSuccessMessage = false
@@ -10,71 +29,176 @@ struct QuickAddView: View {
     private let applicationService = ApplicationService()
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Quick Add Application")
-                .font(.largeTitle)
-                .bold()
-                .padding(.bottom, 10)
-            
-            Form {
-                Section(header: Text("Application Details")) {
-                    TextField("Company Name", text: $companyName)
-                    TextField("Role", text: $role)
-                    DatePicker("Applied Date", selection: $date, displayedComponents: .date)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Quick Add Application")
+                    .font(.largeTitle)
+                    .bold()
+                    .padding(.bottom, 10)
+                
+                Form {
+                    Section(header: Text("Core Details")) {
+                        Picker("Company", selection: $selectedCompany) {
+                            Text("Add new...").tag("__ADD_NEW__")
+                            Divider()
+                            ForEach(existingCompanies, id: \.self) { company in
+                                Text(company).tag(company)
+                            }
+                        }
+                        if selectedCompany == "__ADD_NEW__" {
+                            TextField("New Company Name", text: $newCompany)
+                        }
+                        
+                        Picker("Role", selection: $selectedRole) {
+                            Text("Add new...").tag("__ADD_NEW__")
+                            Divider()
+                            ForEach(existingRoles, id: \.self) { role in
+                                Text(role).tag(role)
+                            }
+                        }
+                        if selectedRole == "__ADD_NEW__" {
+                            TextField("New Role", text: $newRole)
+                        }
+                        
+                        TextField("Role Notes (Optional)", text: $roleExtraNotes)
+                    }
+                    
+                    Section(header: Text("Additional Details")) {
+                        Picker("Season", selection: $selectedSeason) {
+                            Text("Add new...").tag("__ADD_NEW__")
+                            Text("None").tag("__NONE__")
+                            Divider()
+                            ForEach(existingSeasons, id: \.self) { season in
+                                Text(season).tag(season)
+                            }
+                        }
+                        if selectedSeason == "__ADD_NEW__" {
+                            TextField("New Season", text: $newSeason)
+                        }
+                        
+                        TextField("Duration (e.g. Summer, 12 weeks)", text: $duration)
+                        
+                        HStack {
+                            Text("Locations")
+                            Spacer()
+                            MultiSelectMenu(title: "Select Locations", options: existingLocations, selectedOptions: $selectedLocations)
+                        }
+                        TextField("Add Custom Location (Optional)", text: $newLocation)
+                    }
+                    
+                    Section(header: Text("Initial Event")) {
+                        DatePicker("Applied Date & Time", selection: $date, displayedComponents: [.date, .hourAndMinute])
+                    }
+                    
+                    Section(header: Text("Notes")) {
+                        TextEditor(text: $notes)
+                            .frame(minHeight: 100)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                            )
+                    }
+                }
+                .formStyle(.grouped)
+                
+                HStack {
+                    Spacer()
+                    Button(action: save) {
+                        Text("Save & Add Another")
+                            .bold()
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
+                    .disabled(isSaveDisabled)
+                }
+                .padding(.top, 10)
+                
+                if showSuccessMessage {
+                    Text("Application successfully added!")
+                        .foregroundColor(.green)
+                        .transition(.opacity)
                 }
                 
-                Section(header: Text("Notes")) {
-                    TextEditor(text: $notes)
-                        .frame(minHeight: 100)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
-                        )
-                }
-            }
-            .formStyle(.grouped)
-            
-            HStack {
                 Spacer()
-                Button(action: save) {
-                    Text("Save & Add Another")
-                        .bold()
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.blue)
-                .disabled(companyName.isEmpty || role.isEmpty)
             }
-            .padding(.top, 10)
-            
-            if showSuccessMessage {
-                Text("Application successfully added!")
-                    .foregroundColor(.green)
-                    .transition(.opacity)
-            }
-            
-            Spacer()
+            .padding(30)
         }
-        .padding(30)
+        .onAppear {
+            loadExistingData()
+        }
+    }
+    
+    private var isSaveDisabled: Bool {
+        let finalCompany = selectedCompany == "__ADD_NEW__" ? newCompany : selectedCompany
+        let finalRole = selectedRole == "__ADD_NEW__" ? newRole : selectedRole
+        return finalCompany.trimmingCharacters(in: .whitespaces).isEmpty || finalRole.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+    
+    private func loadExistingData() {
+        do {
+            let apps = try applicationService.fetchRawApplications()
+            existingCompanies = Array(Set(apps.map { $0.companyName })).sorted()
+            existingRoles = Array(Set(apps.map { $0.role })).sorted()
+            existingSeasons = Array(Set(apps.compactMap { $0.season }.filter { !$0.isEmpty })).sorted()
+            
+            var locs = Set<String>()
+            for app in apps {
+                if let loc = app.location {
+                    let parts = loc.components(separatedBy: ";").map { $0.trimmingCharacters(in: .whitespaces) }
+                    locs.formUnion(parts)
+                }
+            }
+            locs.remove("")
+            existingLocations = Array(locs).sorted()
+        } catch {
+            print("Failed to load existing data: \(error)")
+        }
     }
     
     private func save() {
+        let finalCompany = selectedCompany == "__ADD_NEW__" ? newCompany : selectedCompany
+        let finalRole = selectedRole == "__ADD_NEW__" ? newRole : selectedRole
+        let finalSeason: String? = {
+            if selectedSeason == "__NONE__" { return nil }
+            if selectedSeason == "__ADD_NEW__" { return newSeason.isEmpty ? nil : newSeason }
+            return selectedSeason
+        }()
+        
+        let allLocs = Array(selectedLocations) + [newLocation]
+        let validLocs = allLocs.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let finalLocation = validLocs.isEmpty ? nil : validLocs.joined(separator: "; ")
+        
         var newApp = JobApplication(
-            companyName: companyName,
-            role: role,
+            companyName: finalCompany.trimmingCharacters(in: .whitespaces),
+            role: finalRole.trimmingCharacters(in: .whitespaces),
+            roleExtraNotes: roleExtraNotes.isEmpty ? nil : roleExtraNotes,
+            duration: duration.isEmpty ? nil : duration,
+            season: finalSeason?.trimmingCharacters(in: .whitespaces),
+            location: finalLocation,
             notes: notes.isEmpty ? nil : notes
         )
         do {
             try applicationService.createApplication(&newApp, initialEventDate: date)
             
+            // Reload data to reflect potentially new company/role/season/location
+            loadExistingData()
+            
             // Reset form
-            companyName = ""
-            role = ""
+            selectedCompany = "__ADD_NEW__"
+            newCompany = ""
+            selectedRole = "__ADD_NEW__"
+            newRole = ""
+            roleExtraNotes = ""
+            selectedSeason = "__ADD_NEW__"
+            newSeason = ""
+            duration = ""
+            selectedLocations.removeAll()
+            newLocation = ""
             notes = ""
             date = Date()
             
-            // Show success message briefly
             withAnimation {
                 showSuccessMessage = true
             }
