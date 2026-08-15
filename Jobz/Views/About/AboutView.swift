@@ -3,6 +3,7 @@ import SwiftUI
 struct AboutView: View {
     @Environment(\.openURL) private var openURL
     @State private var isLicenseExpanded: Bool = false
+    @State private var isTextualLicenseExpanded: Bool = false
     
     var body: some View {
         ScrollView {
@@ -114,6 +115,86 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                             },
                             label: {
                                 Text(isLicenseExpanded ? "Hide Full License Text" : "View Full MIT License Text")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.accentColor)
+                            }
+                        )
+                    }
+                    .padding(16)
+                    .background(Color(NSColor.secondarySystemFill))
+                    .cornerRadius(12)
+                    
+                    // Textual Attribution Card
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .top) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 8) {
+                                    Text("Textual")
+                                        .font(.headline)
+                                    Text("v0.5.0")
+                                        .font(.caption)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.blue.opacity(0.15))
+                                        .foregroundColor(.blue)
+                                        .cornerRadius(4)
+                                    Text("MIT License")
+                                        .font(.caption)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.green.opacity(0.15))
+                                        .foregroundColor(.green)
+                                        .cornerRadius(4)
+                                }
+                                Text("A Markdown viewer for SwiftUI.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                Text("Copyright © 2025 Guillermo González")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                if let url = URL(string: "https://github.com/gonzalezreal/textual") {
+                                    openURL(url)
+                                }
+                            }) {
+                                HStack(spacing: 4) {
+                                    Text("GitHub")
+                                    Image(systemName: "arrow.up.right.square")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.blue)
+                        }
+                        
+                        DisclosureGroup(
+                            isExpanded: $isTextualLicenseExpanded,
+                            content: {
+                                Text("""
+Copyright (C) 2025 Guillermo González
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+""")
+                                .font(.system(.caption, design: .monospaced))
+                                .textSelection(.enabled)
+                                .padding(12)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color(NSColor.controlBackgroundColor))
+                                .cornerRadius(8)
+                                .padding(.top, 8)
+                            },
+                            label: {
+                                Text(isTextualLicenseExpanded ? "Hide Full License Text" : "View Full MIT License Text")
                                     .font(.caption)
                                     .fontWeight(.medium)
                                     .foregroundColor(.accentColor)

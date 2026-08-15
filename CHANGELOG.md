@@ -9,6 +9,7 @@
 - **App Category Configuration**: Configured `INFOPLIST_KEY_LSApplicationCategoryType` (`public.app-category.productivity`) in `project.pbxproj` build settings to resolve Xcode target category warnings.
 
 ### Added
+- **Textual License Attribution**: Added an attribution card for the Textual library to the About & Licenses page to bring it in line with the README documentation.
 - **Scratchpad Application Selector & Alphabetical Sorting**: Displayed the application ID next to company name in the Scratchpad application picker (`Company (ID: #) - Role`) to disambiguate multiple applications for the same company/role across seasons, and alphabetically sorted the dropdown options.
 - **Blank Scratchpad Timeline Logging**: Allowed saving events to the timeline from the Scratchpad without requiring notes (persisting `nil` update notes).
 - **Multi-Location Picker Component & Form Support**: Extracted `MultiSelectLocationMenu` into a standalone reusable component supporting multiple location selection, "Clear All", and dynamic custom location addition. Added `MultiSelectLocationMenu` to `NewApplicationForm` so users can choose multiple locations when creating a new application.
