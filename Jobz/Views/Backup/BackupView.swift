@@ -168,14 +168,6 @@ struct BackupView: View {
         .sheet(isPresented: $showModeSelectionSheet) {
             importModeSheet
         }
-        .alert("Confirm Full Restore", isPresented: $showConfirmReplaceAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Replace All Data", role: .destructive) {
-                executeImport(mode: .replaceAll)
-            }
-        } message: {
-            Text("This will wipe all existing job applications, ledger events, musings, notes, custom locations, and saved SQL queries, replacing them with the contents of this archive.\n\nThis action cannot be undone.")
-        }
         .alert("Import Successful", isPresented: $showSuccessAlert) {
             Button("OK") { }
         } message: {
@@ -318,6 +310,30 @@ struct BackupView: View {
                 }
             }
             
+            if selectedMode == .replaceAll {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                        .font(.body)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Destructive Action")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.orange)
+                        Text("Full Restore will completely erase existing applications, ledger events, notes, and custom queries before restoring from this backup archive.")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(10)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                )
+            }
+            
             Divider()
             
             HStack {
@@ -335,7 +351,7 @@ struct BackupView: View {
                         executeImport(mode: .merge)
                     }
                 }) {
-                    Text(selectedMode == .replaceAll ? "Proceed to Replace..." : "Merge Data")
+                    Text(selectedMode == .replaceAll ? "Replace All Data..." : "Merge Data")
                         .padding(.horizontal, 8)
                 }
                 .buttonStyle(.borderedProminent)
@@ -344,6 +360,14 @@ struct BackupView: View {
         }
         .padding(24)
         .frame(minWidth: 480, maxWidth: 540)
+        .alert("Confirm Full Restore", isPresented: $showConfirmReplaceAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Replace All Data", role: .destructive) {
+                executeImport(mode: .replaceAll)
+            }
+        } message: {
+            Text("This will wipe all existing job applications, ledger events, musings, notes, custom locations, and saved SQL queries, replacing them with the contents of this archive.\n\nThis action cannot be undone.")
+        }
     }
     
     // MARK: - Actions
@@ -409,7 +433,7 @@ struct BackupView: View {
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 let result = try BackupService.importBackup(from: url, mode: mode, using: self.applicationService)
-                DispatchQueue.main.async {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     self.isImporting = false
                     self.importResult = result
                     self.showSuccessAlert = true
@@ -417,7 +441,7 @@ struct BackupView: View {
                     self.inspectedMetadata = nil
                 }
             } catch {
-                DispatchQueue.main.async {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     self.isImporting = false
                     self.errorMessage = error.localizedDescription
                     self.showErrorAlert = true
