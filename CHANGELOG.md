@@ -10,6 +10,7 @@
 - **Metrics Time-Series Statement Arguments**: Fixed optional unwrapping of `StatementArguments` in `MetricsService.fetchTimeSeriesData` to resolve compilation failure.
 
 ### Added
+- **Agent Git Workflow Guidelines**: Added memory rules in `.agents/rules/git_workflow.md` requiring conventional commit messages, atomic commits, changelog updates on every commit, and clean build verification prior to committing.
 - Efficient GRDB query in `MetricsService` (`fetchTimeSeriesData`) to fetch time-series data for applications, interviews, and online assessments by week.
 - **Interactive Dashboard Line Chart**: Rewrote `ApplicationsOverTimeChart` to include hoverable data points, toggles for "Applications", "Interviews", and "OAs", and a dynamic Date Range Picker.
 - Added an auto-generated SQLite tooltip string under the line chart to display the executed SQL query for educational transparency.
