@@ -30,27 +30,26 @@ struct ApplicationsOverTimeChart: View {
                         .font(.caption.bold())
                         .foregroundColor(hoveredDate == nil ? .secondary : .primary)
                     
-                    if showApplications {
-                        HStack(spacing: 4) {
-                            Text("Applications:").foregroundColor(.blue)
-                            Text("\(data?.applications ?? 0)").foregroundColor(.blue)
-                        }
-                        .font(.caption)
+                    HStack(spacing: 4) {
+                        Text("Applications:").foregroundColor(.blue)
+                        Text("\(data?.applications ?? 0)").foregroundColor(.blue)
                     }
-                    if showOAs {
-                        HStack(spacing: 4) {
-                            Text("OAs:").foregroundColor(.purple)
-                            Text("\(data?.oas ?? 0)").foregroundColor(.purple)
-                        }
-                        .font(.caption)
+                    .font(.caption)
+                    .opacity(showApplications ? 1.0 : 0.3)
+                    
+                    HStack(spacing: 4) {
+                        Text("OAs:").foregroundColor(.purple)
+                        Text("\(data?.oas ?? 0)").foregroundColor(.purple)
                     }
-                    if showInterviews {
-                        HStack(spacing: 4) {
-                            Text("Interviews:").foregroundColor(.orange)
-                            Text("\(data?.interviews ?? 0)").foregroundColor(.orange)
-                        }
-                        .font(.caption)
+                    .font(.caption)
+                    .opacity(showOAs ? 1.0 : 0.3)
+                    
+                    HStack(spacing: 4) {
+                        Text("Interviews:").foregroundColor(.orange)
+                        Text("\(data?.interviews ?? 0)").foregroundColor(.orange)
                     }
+                    .font(.caption)
+                    .opacity(showInterviews ? 1.0 : 0.3)
                 }
                 .padding(8)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -114,67 +113,61 @@ struct ApplicationsOverTimeChart: View {
             
             // Chart Section
             Chart {
-                if showApplications {
-                    ForEach(timeData, id: \.weekStart) { item in
-                        LineMark(
-                            x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.applications),
-                            series: .value("Metric", "Applications")
-                        )
-                        .foregroundStyle(Color.blue)
-                        .interpolationMethod(.monotone)
-                        
-                        AreaMark(
-                            x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            yStart: .value("Count", 0),
-                            yEnd: .value("Count", item.applications),
-                            series: .value("Metric", "Applications")
-                        )
-                        .foregroundStyle(LinearGradient(colors: [Color.blue.opacity(0.2), Color.clear], startPoint: .top, endPoint: .bottom))
-                        .interpolationMethod(.monotone)
-                    }
+                ForEach(timeData, id: \.weekStart) { item in
+                    LineMark(
+                        x: .value("Date", item.weekStart, unit: .weekOfYear),
+                        y: .value("Count", item.applications),
+                        series: .value("Metric", "Applications")
+                    )
+                    .foregroundStyle(Color.blue.opacity(showApplications ? 1.0 : 0.2))
+                    .interpolationMethod(.monotone)
+                    
+                    AreaMark(
+                        x: .value("Date", item.weekStart, unit: .weekOfYear),
+                        yStart: .value("Count", 0),
+                        yEnd: .value("Count", item.applications),
+                        series: .value("Metric", "Applications")
+                    )
+                    .foregroundStyle(LinearGradient(colors: [Color.blue.opacity(showApplications ? 0.2 : 0.05), Color.clear], startPoint: .top, endPoint: .bottom))
+                    .interpolationMethod(.monotone)
                 }
                 
-                if showOAs {
-                    ForEach(timeData, id: \.weekStart) { item in
-                        LineMark(
-                            x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.oas),
-                            series: .value("Metric", "OAs")
-                        )
-                        .foregroundStyle(Color.purple)
-                        .interpolationMethod(.monotone)
-                        
-                        AreaMark(
-                            x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            yStart: .value("Count", 0),
-                            yEnd: .value("Count", item.oas),
-                            series: .value("Metric", "OAs")
-                        )
-                        .foregroundStyle(LinearGradient(colors: [Color.purple.opacity(0.2), Color.clear], startPoint: .top, endPoint: .bottom))
-                        .interpolationMethod(.monotone)
-                    }
+                ForEach(timeData, id: \.weekStart) { item in
+                    LineMark(
+                        x: .value("Date", item.weekStart, unit: .weekOfYear),
+                        y: .value("Count", item.oas),
+                        series: .value("Metric", "OAs")
+                    )
+                    .foregroundStyle(Color.purple.opacity(showOAs ? 1.0 : 0.2))
+                    .interpolationMethod(.monotone)
+                    
+                    AreaMark(
+                        x: .value("Date", item.weekStart, unit: .weekOfYear),
+                        yStart: .value("Count", 0),
+                        yEnd: .value("Count", item.oas),
+                        series: .value("Metric", "OAs")
+                    )
+                    .foregroundStyle(LinearGradient(colors: [Color.purple.opacity(showOAs ? 0.2 : 0.05), Color.clear], startPoint: .top, endPoint: .bottom))
+                    .interpolationMethod(.monotone)
                 }
                 
-                if showInterviews {
-                    ForEach(timeData, id: \.weekStart) { item in
-                        LineMark(
-                            x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.interviews),
-                            series: .value("Metric", "Interviews")
-                        )
-                        .foregroundStyle(Color.orange)
-                        .interpolationMethod(.monotone)
-                        
-                        AreaMark(
-                            x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            yStart: .value("Count", 0),
-                            yEnd: .value("Count", item.interviews),
-                            series: .value("Metric", "Interviews")
-                        )
-                        .foregroundStyle(LinearGradient(colors: [Color.orange.opacity(0.2), Color.clear], startPoint: .top, endPoint: .bottom))
-                        .interpolationMethod(.monotone)
-                    }
+                ForEach(timeData, id: \.weekStart) { item in
+                    LineMark(
+                        x: .value("Date", item.weekStart, unit: .weekOfYear),
+                        y: .value("Count", item.interviews),
+                        series: .value("Metric", "Interviews")
+                    )
+                    .foregroundStyle(Color.orange.opacity(showInterviews ? 1.0 : 0.2))
+                    .interpolationMethod(.monotone)
+                    
+                    AreaMark(
+                        x: .value("Date", item.weekStart, unit: .weekOfYear),
+                        yStart: .value("Count", 0),
+                        yEnd: .value("Count", item.interviews),
+                        series: .value("Metric", "Interviews")
+                    )
+                    .foregroundStyle(LinearGradient(colors: [Color.orange.opacity(showInterviews ? 0.2 : 0.05), Color.clear], startPoint: .top, endPoint: .bottom))
+                    .interpolationMethod(.monotone)
                 }
                 
                 if let hoveredDate = hoveredDate {
