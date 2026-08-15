@@ -21,51 +21,19 @@ struct SavedQuery: Identifiable, Codable, Equatable {
         ),
         SavedQuery(
             name: "Key Stats Summary",
-            sql: """
-            SELECT 
-                SUM(CASE WHEN type = 'Interview' THEN 1 ELSE 0 END) AS total_interviews,
-                SUM(CASE WHEN type = 'Online Assessment' THEN 1 ELSE 0 END) AS total_assessments,
-                SUM(CASE WHEN type = 'Chat' THEN 1 ELSE 0 END) AS total_chats
-            FROM ledger;
-            """
+            sql: ResourceLoader.loadQuery("query_key_stats.sql")
         ),
         SavedQuery(
             name: "Application Conversion Rates",
-            sql: """
-            SELECT 
-                COUNT(*) AS total_applications,
-                COUNT(CASE WHEN numInterviews > 0 THEN 1 END) AS applications_with_interviews,
-                ROUND(COUNT(CASE WHEN numInterviews > 0 THEN 1 END) * 100.0 / COUNT(*), 1) || '%' AS interview_rate,
-                COUNT(CASE WHEN statusRaw IN ('Offered', 'Accepted') THEN 1 END) AS applications_with_offers,
-                ROUND(COUNT(CASE WHEN statusRaw IN ('Offered', 'Accepted') THEN 1 END) * 100.0 / COUNT(*), 1) || '%' AS offer_rate
-            FROM application_status_view;
-            """
+            sql: ResourceLoader.loadQuery("query_conversion_rates.sql")
         ),
         SavedQuery(
             name: "Current Application Status Breakdown",
-            sql: """
-            SELECT 
-                statusRaw AS current_status,
-                COUNT(*) AS count,
-                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM application_status_view), 1) || '%' AS share
-            FROM application_status_view
-            GROUP BY statusRaw
-            ORDER BY count DESC;
-            """
+            sql: ResourceLoader.loadQuery("query_status_breakdown.sql")
         ),
         SavedQuery(
             name: "Monthly Activity Velocity",
-            sql: """
-            SELECT 
-                strftime('%Y-%m', created_at) AS month,
-                SUM(CASE WHEN type = 'Applied' THEN 1 ELSE 0 END) AS applications,
-                SUM(CASE WHEN type = 'Online Assessment' THEN 1 ELSE 0 END) AS assessments,
-                SUM(CASE WHEN type = 'Interview' THEN 1 ELSE 0 END) AS interviews,
-                SUM(CASE WHEN type = 'Offer' THEN 1 ELSE 0 END) AS offers
-            FROM ledger
-            GROUP BY month
-            ORDER BY month DESC;
-            """
+            sql: ResourceLoader.loadQuery("query_monthly_velocity.sql")
         )
     ]
 }
