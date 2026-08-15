@@ -23,17 +23,6 @@ struct ApplicationsOverTimeChart: View {
                     .font(.headline)
                 
                 Spacer()
-                
-                // Toggles
-                Toggle("Applications", isOn: $showApplications)
-                    .toggleStyle(.checkbox)
-                    .tint(.blue)
-                Toggle("Interviews", isOn: $showInterviews)
-                    .toggleStyle(.checkbox)
-                    .tint(.orange)
-                Toggle("OAs", isOn: $showOAs)
-                    .toggleStyle(.checkbox)
-                    .tint(.purple)
             }
             
             // Date Picker
@@ -61,68 +50,88 @@ struct ApplicationsOverTimeChart: View {
             }
             .padding(.bottom, 8)
             
-            Chart {
+            HStack(alignment: .top, spacing: 16) {
+                Chart {
                 ForEach(timeData, id: \.weekStart) { item in
                     if showApplications {
                         LineMark(
                             x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.applications),
-                            series: .value("Metric", "Applications")
+                            y: .value("Count", item.applications)
                         )
                         .foregroundStyle(Color.blue)
                         .interpolationMethod(.monotone)
                         
                         AreaMark(
                             x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.applications),
-                            series: .value("Metric", "Applications")
+                            y: .value("Count", item.applications)
                         )
-                        .foregroundStyle(Color.blue.opacity(0.1))
+                        .foregroundStyle(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.3), Color.blue.opacity(0.0)]), startPoint: .top, endPoint: .bottom))
+                        .interpolationMethod(.monotone)
                     }
                     
                     if showInterviews {
                         LineMark(
                             x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.interviews),
-                            series: .value("Metric", "Interviews")
+                            y: .value("Count", item.interviews)
                         )
                         .foregroundStyle(Color.orange)
+                        .interpolationMethod(.monotone)
+                        
+                        AreaMark(
+                            x: .value("Date", item.weekStart, unit: .weekOfYear),
+                            y: .value("Count", item.interviews)
+                        )
+                        .foregroundStyle(LinearGradient(gradient: Gradient(colors: [Color.orange.opacity(0.3), Color.orange.opacity(0.0)]), startPoint: .top, endPoint: .bottom))
                         .interpolationMethod(.monotone)
                     }
                     
                     if showOAs {
                         LineMark(
                             x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.oas),
-                            series: .value("Metric", "OAs")
+                            y: .value("Count", item.oas)
                         )
                         .foregroundStyle(Color.purple)
+                        .interpolationMethod(.monotone)
+                        
+                        AreaMark(
+                            x: .value("Date", item.weekStart, unit: .weekOfYear),
+                            y: .value("Count", item.oas)
+                        )
+                        .foregroundStyle(LinearGradient(gradient: Gradient(colors: [Color.purple.opacity(0.3), Color.purple.opacity(0.0)]), startPoint: .top, endPoint: .bottom))
                         .interpolationMethod(.monotone)
                     }
                 }
                 
-                if let hoveredDate = hoveredDate, let data = timeData.first(where: { Calendar.current.isDate($0.weekStart, equalTo: hoveredDate, toGranularity: .weekOfYear) }) {
+                if let hoveredDate = hoveredDate {
                     RuleMark(x: .value("Hover", hoveredDate, unit: .weekOfYear))
                         .foregroundStyle(Color.gray.opacity(0.5))
-                        .annotation(position: .top) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(hoveredDate.formatted(date: .abbreviated, time: .omitted))
-                                    .font(.caption.bold())
-                                if showApplications {
-                                    Text("Applications: \(data.applications)").font(.caption).foregroundColor(.blue)
-                                }
-                                if showInterviews {
-                                    Text("Interviews: \(data.interviews)").font(.caption).foregroundColor(.orange)
-                                }
-                                if showOAs {
-                                    Text("OAs: \(data.oas)").font(.caption).foregroundColor(.purple)
-                                }
+                }
+            }
+            .chartOverlay { proxy in
+                GeometryReader { geometry in
+                    if let hoveredDate = hoveredDate,
+                       let data = timeData.first(where: { Calendar.current.isDate($0.weekStart, equalTo: hoveredDate, toGranularity: .weekOfYear) }),
+                       let xPosition = proxy.position(forX: hoveredDate) {
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(hoveredDate.formatted(date: .abbreviated, time: .omitted))
+                                .font(.caption.bold())
+                            if showApplications {
+                                Text("Applications: \(data.applications)").font(.caption).foregroundColor(.blue)
                             }
-                            .padding(8)
-                            .background(Color(NSColor.windowBackgroundColor).opacity(0.9))
-                            .cornerRadius(8)
-                            .shadow(radius: 2)
+                            if showInterviews {
+                                Text("Interviews: \(data.interviews)").font(.caption).foregroundColor(.orange)
+                            }
+                            if showOAs {
+                                Text("OAs: \(data.oas)").font(.caption).foregroundColor(.purple)
+                            }
                         }
+                        .padding(8)
+                        .background(Color(NSColor.windowBackgroundColor).opacity(0.9))
+                        .cornerRadius(8)
+                        .shadow(radius: 2)
+                        .position(x: min(max(xPosition, 60), geometry.size.width - 60), y: 40)
+                    }
                 }
             }
             .chartXAxis {
@@ -135,7 +144,41 @@ struct ApplicationsOverTimeChart: View {
                 }
             }
             .chartXSelection(value: $hoveredDate)
+            .chartLegend(.hidden)
             .frame(height: 240)
+            
+            // Vertical Legend with Checkboxes
+            VStack(alignment: .leading, spacing: 12) {
+                Toggle(isOn: $showApplications) {
+                    HStack {
+                        Circle().fill(Color.blue).frame(width: 8, height: 8)
+                        Text("Applications").font(.subheadline)
+                    }
+                }
+                .toggleStyle(.checkbox)
+                .tint(.blue)
+                
+                Toggle(isOn: $showInterviews) {
+                    HStack {
+                        Circle().fill(Color.orange).frame(width: 8, height: 8)
+                        Text("Interviews").font(.subheadline)
+                    }
+                }
+                .toggleStyle(.checkbox)
+                .tint(.orange)
+                
+                Toggle(isOn: $showOAs) {
+                    HStack {
+                        Circle().fill(Color.purple).frame(width: 8, height: 8)
+                        Text("OAs").font(.subheadline)
+                    }
+                }
+                .toggleStyle(.checkbox)
+                .tint(.purple)
+            }
+            .padding(.leading, 8)
+            .padding(.top, 24)
+            }
             .onChange(of: isFilteringByDate) { _ in loadData() }
             .onChange(of: startDate) { _ in loadData() }
             .onChange(of: endDate) { _ in loadData() }
