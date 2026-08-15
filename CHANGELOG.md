@@ -9,6 +9,7 @@
 - **App Category Configuration**: Configured `INFOPLIST_KEY_LSApplicationCategoryType` (`public.app-category.productivity`) in `project.pbxproj` build settings to resolve Xcode target category warnings.
 
 ### Added
+- **Musings Tab**: Added a dedicated `MusingsView` tab for unstructured thoughts, utilizing `UserDefaults` and Markdown rendering to keep a single, globally accessible scratchpad outside of specific job applications.
 - **Spreadsheet Search Filtering**: Added global `.searchable` text field filtering to the Applications and Ledger spreadsheet views, enabling users to quickly filter for specific companies, roles, locations, statuses, or keywords (e.g., "Pending").
 - **Quick Add Tab**: Added a dedicated `QuickAddView` to the sidebar with a plus logo for rapidly inserting new applications and initial notes without interacting with spreadsheets.
 - **Textual License Attribution**: Added an attribution card for the Textual library to the About & Licenses page to bring it in line with the README documentation.
