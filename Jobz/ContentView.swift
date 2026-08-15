@@ -22,14 +22,11 @@ struct ContentView: View {
                     NavigationLink(value: SidebarItem.dashboard) {
                         Label("Dashboard", systemImage: "house")
                     }
+                    NavigationLink(value: SidebarItem.quickAdd) {
+                        Label("Quick Add", systemImage: "plus")
+                    }
                     NavigationLink(value: SidebarItem.summary) {
                         Label("Summary", systemImage: "chart.bar.doc.horizontal")
-                    }
-                    NavigationLink(value: SidebarItem.applications) {
-                        Label("Applications", systemImage: "tablecells")
-                    }
-                    NavigationLink(value: SidebarItem.ledger) {
-                        Label("Ledger", systemImage: "text.book.closed")
                     }
                     NavigationLink(value: SidebarItem.scratchpad) {
                         Label("Scratchpad", systemImage: "square.and.pencil")
@@ -37,11 +34,17 @@ struct ContentView: View {
                     NavigationLink(value: SidebarItem.musings) {
                         Label("Musings", systemImage: "text.quote")
                     }
-                    NavigationLink(value: SidebarItem.quickAdd) {
-                        Label("Quick Add", systemImage: "plus")
-                    }
                     NavigationLink(value: SidebarItem.sqlLab) {
                         Label("SQL Lab", systemImage: "server.rack")
+                    }
+                }
+                
+                Section("Raw Spreadsheets") {
+                    NavigationLink(value: SidebarItem.applications) {
+                        Label("Applications", systemImage: "tablecells")
+                    }
+                    NavigationLink(value: SidebarItem.ledger) {
+                        Label("Ledger", systemImage: "text.book.closed")
                     }
                 }
                 
