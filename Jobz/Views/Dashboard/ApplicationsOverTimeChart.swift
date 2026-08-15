@@ -33,21 +33,21 @@ struct ApplicationsOverTimeChart: View {
                     if showApplications {
                         HStack(spacing: 4) {
                             Text("Applications:").foregroundColor(.blue)
-                            Text(data != nil ? "\(data!.applications)" : "-").foregroundColor(.blue)
+                            Text("\(data?.applications ?? 0)").foregroundColor(.blue)
                         }
                         .font(.caption)
                     }
                     if showOAs {
                         HStack(spacing: 4) {
                             Text("OAs:").foregroundColor(.purple)
-                            Text(data != nil ? "\(data!.oas)" : "-").foregroundColor(.purple)
+                            Text("\(data?.oas ?? 0)").foregroundColor(.purple)
                         }
                         .font(.caption)
                     }
                     if showInterviews {
                         HStack(spacing: 4) {
                             Text("Interviews:").foregroundColor(.orange)
-                            Text(data != nil ? "\(data!.interviews)" : "-").foregroundColor(.orange)
+                            Text("\(data?.interviews ?? 0)").foregroundColor(.orange)
                         }
                         .font(.caption)
                     }

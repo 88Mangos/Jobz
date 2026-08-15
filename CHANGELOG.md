@@ -9,7 +9,7 @@
 - **App Category Configuration**: Configured `INFOPLIST_KEY_LSApplicationCategoryType` (`public.app-category.productivity`) in `project.pbxproj` build settings to resolve Xcode target category warnings.
 - **Metrics Time-Series Statement Arguments**: Fixed optional unwrapping of `StatementArguments` in `MetricsService.fetchTimeSeriesData` to resolve compilation failure.
 - **Dashboard Chart AreaMark Stacking**: Fixed an issue where Dashboard Chart rendered AreaMarks stacked on top of each other improperly. Independent metric sequences are now drawn flawlessly without unintended stacking behavior.
-- **Dashboard Hover UI Shift**: Fixed a layout shift in the dashboard hover info box by implementing a fixed-size layout using placeholder values.
+- **Dashboard Hover UI Shift**: Fixed a layout shift in the dashboard hover info box by implementing a fixed-size layout using placeholder values, and updated to show '0' instead of hyphens for missing data or default state to align with expected metric representation.
 
 ### Changed
 - Dashboard Line Chart date filters are now optional and inactive by default, with a "Reset" button to clear the date bounds.
