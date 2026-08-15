@@ -113,14 +113,16 @@ struct ApplicationsOverTimeChart: View {
                     if showApplications {
                         LineMark(
                             x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.applications)
+                            y: .value("Count", item.applications),
+                            series: .value("Metric", "Applications")
                         )
                         .foregroundStyle(Color.blue)
                         .interpolationMethod(.monotone)
                         
                         AreaMark(
                             x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.applications)
+                            y: .value("Count", item.applications),
+                            series: .value("Metric", "Applications")
                         )
                         .foregroundStyle(LinearGradient(colors: [Color.blue.opacity(0.2), Color.clear], startPoint: .top, endPoint: .bottom))
                         .interpolationMethod(.monotone)
@@ -129,14 +131,16 @@ struct ApplicationsOverTimeChart: View {
                     if showInterviews {
                         LineMark(
                             x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.interviews)
+                            y: .value("Count", item.interviews),
+                            series: .value("Metric", "Interviews")
                         )
                         .foregroundStyle(Color.orange)
                         .interpolationMethod(.monotone)
                         
                         AreaMark(
                             x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.interviews)
+                            y: .value("Count", item.interviews),
+                            series: .value("Metric", "Interviews")
                         )
                         .foregroundStyle(LinearGradient(colors: [Color.orange.opacity(0.2), Color.clear], startPoint: .top, endPoint: .bottom))
                         .interpolationMethod(.monotone)
@@ -145,14 +149,16 @@ struct ApplicationsOverTimeChart: View {
                     if showOAs {
                         LineMark(
                             x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.oas)
+                            y: .value("Count", item.oas),
+                            series: .value("Metric", "OAs")
                         )
                         .foregroundStyle(Color.purple)
                         .interpolationMethod(.monotone)
                         
                         AreaMark(
                             x: .value("Date", item.weekStart, unit: .weekOfYear),
-                            y: .value("Count", item.oas)
+                            y: .value("Count", item.oas),
+                            series: .value("Metric", "OAs")
                         )
                         .foregroundStyle(LinearGradient(colors: [Color.purple.opacity(0.2), Color.clear], startPoint: .top, endPoint: .bottom))
                         .interpolationMethod(.monotone)
