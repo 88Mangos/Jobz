@@ -12,6 +12,8 @@ struct SummaryTableView: View {
     @State private var filterRoles = Set<String>()
     @State private var filterStatuses = Set<String>()
     
+    @State private var showingInspector = false
+    
     var uniqueCompanies: [String] { Set(applications.map { $0.companyName }).sorted() }
     var uniqueRoles: [String] { Set(applications.map { $0.role }).sorted() }
     var uniqueStatuses: [String] { Set(applications.map { $0.statusRaw }).sorted() }
@@ -33,8 +35,7 @@ struct SummaryTableView: View {
     }
     
     var body: some View {
-        NavigationSplitView {
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
                 if isFiltering {
                     HStack(spacing: 16) {
                         MultiSelectMenu(title: "Company", options: uniqueCompanies, selectedOptions: $filterCompanies)
@@ -99,14 +100,18 @@ struct SummaryTableView: View {
                     }
                     .labelStyle(.titleAndIcon)
                 }
-            }
-        } detail: {
+        }
+        .inspector(isPresented: $showingInspector) {
             if let selectedId = selection {
                 SummaryDetailView(applicationId: selectedId)
             } else {
-                Text("Select an application to view timeline")
+                Text("Select an application to view details")
                     .foregroundColor(.secondary)
+                    .padding()
             }
+        }
+        .onChange(of: selection) { _, newValue in
+            showingInspector = newValue != nil
         }
         .onAppear {
             loadApplications()
