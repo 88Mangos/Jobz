@@ -11,10 +11,7 @@ struct MusingsView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             HStack {
-                Text("Musings")
-                    .font(.largeTitle)
-                    .bold()
-                
+
                 Spacer()
                 
                 if showCopiedAlert {

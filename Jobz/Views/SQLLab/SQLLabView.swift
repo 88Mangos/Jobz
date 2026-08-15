@@ -28,10 +28,7 @@ struct SQLLabView: View {
                 // Header & Action Bar
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text("SQL Lab")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
+
                         Spacer()
                         
                         Button(action: { showSavedPanel.toggle() }) {

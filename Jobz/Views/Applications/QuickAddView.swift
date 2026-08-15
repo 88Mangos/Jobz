@@ -31,11 +31,7 @@ struct QuickAddView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Quick Add Application")
-                    .font(.largeTitle)
-                    .bold()
-                    .padding(.bottom, 10)
-                
+
                 Form {
                     Section(header: Text("Core Details")) {
                         Picker("Company", selection: $selectedCompany) {
