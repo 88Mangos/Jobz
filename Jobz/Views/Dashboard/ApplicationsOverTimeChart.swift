@@ -208,7 +208,26 @@ struct ApplicationsOverTimeChart: View {
         do {
             let fetchStart = isFilteringByDate ? startDate : nil
             let fetchEnd = isFilteringByDate ? endDate : nil
-            timeData = try metricsService.fetchTimeSeriesData(startDate: fetchStart, endDate: fetchEnd)
+            let rawData = try metricsService.fetchTimeSeriesData(startDate: fetchStart, endDate: fetchEnd)
+            
+            if let firstDate = rawData.first?.weekStart, let lastDate = rawData.last?.weekStart {
+                var filledData: [MetricsService.TimeSeriesDataPoint] = []
+                var currentDate = firstDate
+                var dataIndex = 0
+                
+                while currentDate <= lastDate {
+                    if dataIndex < rawData.count, Calendar.current.isDate(rawData[dataIndex].weekStart, equalTo: currentDate, toGranularity: .weekOfYear) {
+                        filledData.append(rawData[dataIndex])
+                        dataIndex += 1
+                    } else {
+                        filledData.append(MetricsService.TimeSeriesDataPoint(weekStart: currentDate, applications: 0, interviews: 0, oas: 0))
+                    }
+                    currentDate = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: currentDate)!
+                }
+                timeData = filledData
+            } else {
+                timeData = rawData
+            }
         } catch {
             print("Failed to load time series data: \(error)")
         }
