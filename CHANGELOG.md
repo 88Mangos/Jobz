@@ -10,7 +10,6 @@
 - **Metrics Time-Series Statement Arguments**: Fixed optional unwrapping of `StatementArguments` in `MetricsService.fetchTimeSeriesData` to resolve compilation failure.
 
 ### Changed
-- Refined Dashboard Line Chart UI: Checkboxes are now displayed vertically beside the chart as a legend. Area colors under the curve display correctly when date filters are enabled, and hover tooltips no longer expand chart geometry.
 - Dashboard Line Chart date filters are now optional and inactive by default, with a "Reset" button to clear the date bounds.
 - Removed the educational SQLite tooltip from the dashboard line chart.
 
