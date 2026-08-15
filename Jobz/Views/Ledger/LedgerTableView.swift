@@ -18,7 +18,10 @@ struct LedgerTableView: View {
     @State private var showDeleteConfirmation = false
     @State private var sortOrder = [KeyPathComparator(\LedgerTableRow.entry.createdAt, order: .reverse)]
     @State private var isEditing = false
-    @State private var searchText = ""
+    @State private var isFiltering = false
+    
+    @State private var filterTypes = Set<String>()
+    @State private var filterApps = Set<String>()
     
     @State private var newLedgerAppId = ""
     @State private var newLedgerType: EventType = .applied
@@ -39,6 +42,9 @@ struct LedgerTableView: View {
         return zones
     }
     
+    var uniqueTypes: [String] { EventType.allCases.map { $0.rawValue } }
+    var uniqueApps: [String] { Set(entries.map { appDetails(for: $0.applicationId) }).sorted() }
+    
     var filteredAndSortedEntries: [LedgerEntry] {
         var result = entries
         
@@ -46,11 +52,12 @@ struct LedgerTableView: View {
             result = result.filter { $0.applicationId == appId }
         }
         
-        if !searchText.isEmpty {
-            result = result.filter { entry in
-                entry.type.rawValue.localizedCaseInsensitiveContains(searchText) ||
-                (entry.update ?? "").localizedCaseInsensitiveContains(searchText) ||
-                appDetails(for: entry.applicationId).localizedCaseInsensitiveContains(searchText)
+        if isFiltering {
+            if !filterTypes.isEmpty {
+                result = result.filter { filterTypes.contains($0.type.rawValue) }
+            }
+            if !filterApps.isEmpty {
+                result = result.filter { filterApps.contains(appDetails(for: $0.applicationId)) }
             }
         }
         
@@ -98,6 +105,27 @@ struct LedgerTableView: View {
                 Spacer()
             }
             .padding()
+            
+            if isFiltering {
+                HStack(spacing: 16) {
+                    MultiSelectMenu(title: "Type", options: uniqueTypes, selectedOptions: $filterTypes)
+                    MultiSelectMenu(title: "Application", options: uniqueApps, selectedOptions: $filterApps)
+                    
+                    Spacer()
+                    
+                    Button("Clear Filters") {
+                        filterTypes.removeAll()
+                        filterApps.removeAll()
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.red)
+                    .disabled(filterTypes.isEmpty && filterApps.isEmpty)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .background(Color(NSColor.controlBackgroundColor))
+                Divider()
+            }
             
             if isEditing {
                 HStack {
@@ -235,8 +263,14 @@ struct LedgerTableView: View {
             }
         }
         .navigationTitle("Ledger")
-        .searchable(text: $searchText, prompt: "Filter ledger events...")
         .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Toggle(isOn: $isFiltering) {
+                    Label("Filter: \(isFiltering ? "On" : "Off")", systemImage: isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                }
+                .toggleStyle(.button)
+                .labelStyle(.titleAndIcon)
+            }
             ToolbarItem(placement: .primaryAction) {
                 Toggle(isOn: $isEditing) {
                     Label("Edit Mode: \(isEditing ? "On" : "Off")", systemImage: isEditing ? "pencil.circle.fill" : "pencil.circle")

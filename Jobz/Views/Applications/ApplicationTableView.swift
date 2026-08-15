@@ -14,7 +14,12 @@ struct ApplicationTableView: View {
     @State private var showDeleteConfirmation = false
     @State private var sortOrder = [KeyPathComparator(\JobApplication.companyName)]
     @State private var isEditing = false
-    @State private var searchText = ""
+    @State private var isFiltering = false
+    
+    @State private var filterCompanies = Set<String>()
+    @State private var filterRoles = Set<String>()
+    @State private var filterSeasons = Set<String>()
+    @State private var filterLocations = Set<String>()
     
     @State private var newAppId = ""
     @State private var newAppCompany = ""
@@ -22,21 +27,57 @@ struct ApplicationTableView: View {
     @State private var newAppSeason = ""
     @State private var newAppLocation: String? = nil
     
+    var uniqueCompanies: [String] { Set(applications.map { $0.companyName }).sorted() }
+    var uniqueRoles: [String] { Set(applications.map { $0.role }).sorted() }
+    var uniqueSeasons: [String] { Set(applications.map { $0.season ?? "" }).sorted() }
+    var uniqueLocations: [String] { Set(applications.map { $0.location ?? "" }).sorted() }
+    
     var sortedApplications: [JobApplication] {
-        let filtered = searchText.isEmpty ? applications : applications.filter { app in
-            app.companyName.localizedCaseInsensitiveContains(searchText) ||
-            app.role.localizedCaseInsensitiveContains(searchText) ||
-            (app.season ?? "").localizedCaseInsensitiveContains(searchText) ||
-            (app.location ?? "").localizedCaseInsensitiveContains(searchText) ||
-            (app.duration ?? "").localizedCaseInsensitiveContains(searchText) ||
-            (app.notes ?? "").localizedCaseInsensitiveContains(searchText) ||
-            (app.roleExtraNotes ?? "").localizedCaseInsensitiveContains(searchText)
+        var filtered = applications
+        if isFiltering {
+            if !filterCompanies.isEmpty {
+                filtered = filtered.filter { filterCompanies.contains($0.companyName) }
+            }
+            if !filterRoles.isEmpty {
+                filtered = filtered.filter { filterRoles.contains($0.role) }
+            }
+            if !filterSeasons.isEmpty {
+                filtered = filtered.filter { filterSeasons.contains($0.season ?? "") }
+            }
+            if !filterLocations.isEmpty {
+                filtered = filtered.filter { filterLocations.contains($0.location ?? "") }
+            }
         }
         return filtered.sorted(using: sortOrder)
     }
     
     var body: some View {
         VStack(spacing: 0) {
+            if isFiltering {
+                HStack(spacing: 16) {
+                    MultiSelectMenu(title: "Company", options: uniqueCompanies, selectedOptions: $filterCompanies)
+                    MultiSelectMenu(title: "Role", options: uniqueRoles, selectedOptions: $filterRoles)
+                    MultiSelectMenu(title: "Season", options: uniqueSeasons, selectedOptions: $filterSeasons)
+                    MultiSelectMenu(title: "Location", options: uniqueLocations, selectedOptions: $filterLocations)
+                    
+                    Spacer()
+                    
+                    Button("Clear Filters") {
+                        filterCompanies.removeAll()
+                        filterRoles.removeAll()
+                        filterSeasons.removeAll()
+                        filterLocations.removeAll()
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.red)
+                    .disabled(filterCompanies.isEmpty && filterRoles.isEmpty && filterSeasons.isEmpty && filterLocations.isEmpty)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .background(Color(NSColor.controlBackgroundColor))
+                Divider()
+            }
+            
             if isEditing {
                 HStack {
                     TextField("ID (opt)", text: $newAppId)
@@ -174,8 +215,14 @@ struct ApplicationTableView: View {
             }
         }
         .navigationTitle("Applications")
-        .searchable(text: $searchText, prompt: "Filter applications...")
         .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Toggle(isOn: $isFiltering) {
+                    Label("Filter: \(isFiltering ? "On" : "Off")", systemImage: isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                }
+                .toggleStyle(.button)
+                .labelStyle(.titleAndIcon)
+            }
             ToolbarItem(placement: .primaryAction) {
                 Toggle(isOn: $isEditing) {
                     Label("Edit Mode: \(isEditing ? "On" : "Off")", systemImage: isEditing ? "pencil.circle.fill" : "pencil.circle")
