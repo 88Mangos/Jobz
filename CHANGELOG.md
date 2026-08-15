@@ -9,6 +9,10 @@
 - **App Category Configuration**: Configured `INFOPLIST_KEY_LSApplicationCategoryType` (`public.app-category.productivity`) in `project.pbxproj` build settings to resolve Xcode target category warnings.
 - **Metrics Time-Series Statement Arguments**: Fixed optional unwrapping of `StatementArguments` in `MetricsService.fetchTimeSeriesData` to resolve compilation failure.
 
+### Changed
+- Dashboard Line Chart date filters are now optional and inactive by default, with a "Reset" button to clear the date bounds.
+- Removed the educational SQLite tooltip from the dashboard line chart.
+
 ### Added
 - **Agent Git Workflow Guidelines**: Added memory rules in `.agents/rules/git_workflow.md` requiring conventional commit messages, atomic commits, changelog updates on every commit, and clean build verification prior to committing.
 - Efficient GRDB query in `MetricsService` (`fetchTimeSeriesData`) to fetch time-series data for applications, interviews, and online assessments by week.

@@ -6,6 +6,7 @@ struct ApplicationsOverTimeChart: View {
     
     @State private var timeData: [MetricsService.TimeSeriesDataPoint] = []
     
+    @State private var isFilteringByDate: Bool = false
     @State private var startDate: Date = Calendar.current.date(byAdding: .month, value: -6, to: Date()) ?? Date()
     @State private var endDate: Date = Date()
     
@@ -37,11 +38,24 @@ struct ApplicationsOverTimeChart: View {
             
             // Date Picker
             HStack {
-                DatePicker("From", selection: $startDate, displayedComponents: .date)
+                Toggle("Filter by Date", isOn: $isFilteringByDate)
+                    .toggleStyle(.switch)
                     .labelsHidden()
-                Text("to")
-                DatePicker("To", selection: $endDate, displayedComponents: .date)
-                    .labelsHidden()
+                Text("Filter by Date")
+                
+                if isFilteringByDate {
+                    DatePicker("From", selection: $startDate, displayedComponents: .date)
+                        .labelsHidden()
+                    Text("to")
+                    DatePicker("To", selection: $endDate, displayedComponents: .date)
+                        .labelsHidden()
+                    
+                    Button("Reset") {
+                        isFilteringByDate = false
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.blue)
+                }
                 
                 Spacer()
             }
@@ -111,7 +125,6 @@ struct ApplicationsOverTimeChart: View {
                         }
                 }
             }
-            .chartXScale(domain: startDate...endDate)
             .chartXAxis {
                 AxisMarks(values: .stride(by: .month)) { value in
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
@@ -123,15 +136,10 @@ struct ApplicationsOverTimeChart: View {
             }
             .chartXSelection(value: $hoveredDate)
             .frame(height: 240)
+            .onChange(of: isFilteringByDate) { _ in loadData() }
             .onChange(of: startDate) { _ in loadData() }
             .onChange(of: endDate) { _ in loadData() }
             .onAppear { loadData() }
-            
-            // SQLite Tooltip
-            Text(sqliteTooltip)
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(.secondary)
-                .padding(.top, 4)
         }
         .padding()
         .background(Color(NSColor.controlBackgroundColor))
@@ -141,17 +149,11 @@ struct ApplicationsOverTimeChart: View {
     
     private func loadData() {
         do {
-            timeData = try metricsService.fetchTimeSeriesData(startDate: startDate, endDate: endDate)
+            let fetchStart = isFilteringByDate ? startDate : nil
+            let fetchEnd = isFilteringByDate ? endDate : nil
+            timeData = try metricsService.fetchTimeSeriesData(startDate: fetchStart, endDate: fetchEnd)
         } catch {
             print("Failed to load time series data: \(error)")
         }
-    }
-    
-    private var sqliteTooltip: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let startStr = formatter.string(from: startDate)
-        let endStr = formatter.string(from: endDate)
-        return "SELECT date(created_at, '-' || strftime('%w', created_at) || ' days') as week_start, ... FROM ledger WHERE type IN ('Applied', 'Interview', 'Online Assessment') AND created_at >= '\(startStr)' AND created_at <= '\(endStr)' GROUP BY week_start"
     }
 }
