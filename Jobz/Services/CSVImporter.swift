@@ -184,16 +184,9 @@ class CSVImporter {
         return Date()
     }
     
-    static func importApplications(from url: URL, using service: ApplicationService) throws {
-        guard url.startAccessingSecurityScopedResource() else {
-            throw CSVError.fileUnreadable
-        }
-        defer { url.stopAccessingSecurityScopedResource() }
-        
-        let content = try String(contentsOf: url, encoding: .utf8)
+    static func parseApplications(from content: String) throws -> [JobApplication] {
         let rows = parseCSV(content)
-        
-        guard rows.count > 0 else { return }
+        guard rows.count > 0 else { return [] }
         
         let expectedHeaders = Set(["company_name", "role", "duration", "season", "location", "notes"])
         let actualHeaders = rows[0].map { 
@@ -209,7 +202,7 @@ class CSVImporter {
             throw CSVError.validationFailed(matched: Array(matched), missing: Array(missing), extraneous: Array(extraneous))
         }
         
-        guard rows.count > 1 else { return }
+        guard rows.count > 1 else { return [] }
         
         let aIdx = actualHeaders.firstIndex(of: "application_id")
         let cIdx = actualHeaders.firstIndex(of: "company_name")!
@@ -219,6 +212,8 @@ class CSVImporter {
         let sIdx = actualHeaders.firstIndex(of: "season")!
         let lIdx = actualHeaders.firstIndex(of: "location")!
         let nIdx = actualHeaders.firstIndex(of: "notes")!
+        
+        var applications: [JobApplication] = []
         
         for i in 1..<rows.count {
             let cols = rows[i]
@@ -245,7 +240,7 @@ class CSVImporter {
                 appId = parsedId
             }
             
-            var app = JobApplication(
+            let app = JobApplication(
                 id: appId,
                 companyName: companyName,
                 role: role,
@@ -255,21 +250,14 @@ class CSVImporter {
                 location: location,
                 notes: notes
             )
-            try service.createApplication(&app, skipLedger: true)
+            applications.append(app)
         }
-        try service.syncAutoIncrementSequences()
+        return applications
     }
     
-    static func importLedger(from url: URL, using service: ApplicationService) throws {
-        guard url.startAccessingSecurityScopedResource() else {
-            throw CSVError.fileUnreadable
-        }
-        defer { url.stopAccessingSecurityScopedResource() }
-        
-        let content = try String(contentsOf: url, encoding: .utf8)
+    static func parseLedger(from content: String) throws -> [LedgerEntry] {
         let rows = parseCSV(content)
-        
-        guard rows.count > 0 else { return }
+        guard rows.count > 0 else { return [] }
         
         let expectedHeaders = Set(["application_id", "created_at", "type", "update"])
         let actualHeaders = rows[0].map { 
@@ -285,13 +273,16 @@ class CSVImporter {
             throw CSVError.validationFailed(matched: Array(matched), missing: Array(missing), extraneous: Array(extraneous))
         }
         
-        guard rows.count > 1 else { return }
+        guard rows.count > 1 else { return [] }
         
+        let lidIdx = actualHeaders.firstIndex(of: "ledger_id")
         let aIdx = actualHeaders.firstIndex(of: "application_id")!
         let cIdx = actualHeaders.firstIndex(of: "created_at")!
         let tIdx = actualHeaders.firstIndex(of: "type")!
         let uIdx = actualHeaders.firstIndex(of: "update")!
         let tzIdx = actualHeaders.firstIndex(of: "timezone")
+        
+        var entries: [LedgerEntry] = []
         
         for i in 1..<rows.count {
             let cols = rows[i]
@@ -311,16 +302,50 @@ class CSVImporter {
             let updateStr = getCol(uIdx)
             let timezoneStr = getCol(tzIdx)
             
+            var ledgerId: Int64? = nil
+            if let lStr = getCol(lidIdx), let parsedLid = Int64(lStr) {
+                ledgerId = parsedLid
+            }
+            
             let date = parseDate(dateStr)
             let type = EventType(rawValue: typeStr) ?? .update
             
-            var entry = LedgerEntry(
+            let entry = LedgerEntry(
+                ledgerId: ledgerId,
                 createdAt: date,
                 type: type,
                 applicationId: appId,
                 update: updateStr,
                 timezone: timezoneStr
             )
+            entries.append(entry)
+        }
+        return entries
+    }
+    
+    static func importApplications(from url: URL, using service: ApplicationService) throws {
+        guard url.startAccessingSecurityScopedResource() else {
+            throw CSVError.fileUnreadable
+        }
+        defer { url.stopAccessingSecurityScopedResource() }
+        
+        let content = try String(contentsOf: url, encoding: .utf8)
+        let apps = try parseApplications(from: content)
+        for var app in apps {
+            try service.createApplication(&app, skipLedger: true)
+        }
+        try service.syncAutoIncrementSequences()
+    }
+    
+    static func importLedger(from url: URL, using service: ApplicationService) throws {
+        guard url.startAccessingSecurityScopedResource() else {
+            throw CSVError.fileUnreadable
+        }
+        defer { url.stopAccessingSecurityScopedResource() }
+        
+        let content = try String(contentsOf: url, encoding: .utf8)
+        let entries = try parseLedger(from: content)
+        for var entry in entries {
             try service.addLedgerEntry(&entry)
         }
         try service.syncAutoIncrementSequences()

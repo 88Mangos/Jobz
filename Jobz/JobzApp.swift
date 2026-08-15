@@ -36,6 +36,12 @@ struct JobzApp: App {
                     openWindow(id: "about-licenses")
                 }
             }
+            CommandGroup(replacing: .importExport) {
+                Button("Export All Data (.zip)...") {
+                    BackupService.promptExportBackup()
+                }
+                .keyboardShortcut("e", modifiers: [.command, .shift])
+            }
         }
     }
 }

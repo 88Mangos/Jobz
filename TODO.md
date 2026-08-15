@@ -1,5 +1,5 @@
 # Features Left
-- [ ] Exporting all User Data (also leads to easier backups)
+- [x] Exporting all User Data (also leads to easier backups)
 
 ## Exporting all User Data
 Export everything as one Zip File and ingest everything as one zip file (needs to include EVERYTHING include dangling notes and My Saved SQL queries.)

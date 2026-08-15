@@ -21,12 +21,19 @@ public class DatabaseManager {
             }
             
             let databaseURL = directoryURL.appendingPathComponent(dbName)
-            dbQueue = try DatabaseQueue(path: databaseURL.path)
-            
-            try AppDatabase.setupMigrations(dbQueue)
+            let queue = try DatabaseQueue(path: databaseURL.path)
+            try AppDatabase.setupMigrations(queue)
+            dbQueue = queue
         } catch {
-            os_log("Database initialization failed: %{public}@", error.localizedDescription)
-            fatalError("Database initialization failed: \(error)")
+            os_log("Falling back to in-memory database: %{public}@", error.localizedDescription)
+            do {
+                let queue = try DatabaseQueue()
+                try AppDatabase.setupMigrations(queue)
+                dbQueue = queue
+            } catch {
+                os_log("In-memory database initialization failed: %{public}@", error.localizedDescription)
+                dbQueue = try! DatabaseQueue()
+            }
         }
     }
     

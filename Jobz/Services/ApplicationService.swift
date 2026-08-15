@@ -1,7 +1,7 @@
 import Foundation
 import GRDB
 
-class ApplicationService {
+struct ApplicationService {
     let dbQueue: DatabaseQueue
     
     init(dbQueue: DatabaseQueue = DatabaseManager.shared.dbQueue) {
@@ -91,4 +91,38 @@ class ApplicationService {
             try db.execute(sql: "UPDATE sqlite_sequence SET seq = COALESCE((SELECT MAX(ledger_id) FROM ledger), 0) WHERE name = 'ledger'")
         }
     }
+    
+    func restoreAllApplicationsAndLedger(applications: [JobApplication], ledgerEntries: [LedgerEntry]) throws {
+        try dbQueue.write { db in
+            try db.execute(sql: "PRAGMA foreign_keys = OFF;")
+            try db.execute(sql: "DELETE FROM ledger;")
+            try db.execute(sql: "DELETE FROM application;")
+            try db.execute(sql: "PRAGMA foreign_keys = ON;")
+            
+            for var app in applications {
+                try app.insert(db)
+            }
+            for var entry in ledgerEntries {
+                try entry.insert(db)
+            }
+            
+            try db.execute(sql: "UPDATE sqlite_sequence SET seq = COALESCE((SELECT MAX(application_id) FROM application), 0) WHERE name = 'application'")
+            try db.execute(sql: "UPDATE sqlite_sequence SET seq = COALESCE((SELECT MAX(ledger_id) FROM ledger), 0) WHERE name = 'ledger'")
+        }
+    }
+    
+    func mergeApplicationsAndLedger(applications: [JobApplication], ledgerEntries: [LedgerEntry]) throws {
+        try dbQueue.write { db in
+            for var app in applications {
+                try app.save(db)
+            }
+            for var entry in ledgerEntries {
+                try entry.save(db)
+            }
+            
+            try db.execute(sql: "UPDATE sqlite_sequence SET seq = COALESCE((SELECT MAX(application_id) FROM application), 0) WHERE name = 'application'")
+            try db.execute(sql: "UPDATE sqlite_sequence SET seq = COALESCE((SELECT MAX(ledger_id) FROM ledger), 0) WHERE name = 'ledger'")
+        }
+    }
 }
+

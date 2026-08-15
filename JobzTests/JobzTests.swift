@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+import GRDB
 @testable import Jobz
 
 final class JobzTests: XCTestCase {
@@ -139,5 +140,205 @@ final class JobzTests: XCTestCase {
         let customResult = LocationParser.formatLocations(["Remote", "London, UK"], sortedBy: options)
         XCTAssertEqual(customResult, "Remote; London, UK")
     }
+
+    func testSemicolonLocationsWithCommasCSVHandling() throws {
+        let originalApps = [
+            JobApplication(
+                id: 1,
+                companyName: "Apple Inc.",
+                role: "iOS Engineer",
+                roleExtraNotes: "Swift, SwiftUI",
+                duration: "Full-time",
+                season: "Fall 2026",
+                location: "Cupertino, CA; Seattle, WA; Remote",
+                notes: "Top choice"
+            ),
+            JobApplication(
+                id: 2,
+                companyName: "Meta",
+                role: "Research Scientist",
+                roleExtraNotes: "AI/ML",
+                duration: "Summer 2026",
+                season: "Summer 2026",
+                location: "Menlo Park, CA; New York, NY; London, UK",
+                notes: "Interesting team"
+            )
+        ]
+        
+        let csv = CSVExporter.generateApplicationsCSV(originalApps)
+        let parsed = try CSVImporter.parseApplications(from: csv)
+        
+        XCTAssertEqual(parsed.count, 2)
+        XCTAssertEqual(parsed[0].location, "Cupertino, CA; Seattle, WA; Remote")
+        XCTAssertEqual(parsed[1].location, "Menlo Park, CA; New York, NY; London, UK")
+    }
+
+    func testPureZipArchive() throws {
+        let entry1 = ZipEntry(name: "test1.txt", data: Data("Hello World 123".utf8))
+        let entry2 = ZipEntry(name: "nested/test2.json", data: Data("{\"key\": \"value\"}".utf8))
+        
+        let zip = ZipArchive.createZip(entries: [entry1, entry2])
+        XCTAssertGreaterThan(zip.count, 0)
+        
+        let extracted = try ZipArchive.extractZip(from: zip)
+        XCTAssertEqual(extracted.count, 2)
+        XCTAssertEqual(extracted[0].name, "test1.txt")
+        XCTAssertEqual(String(data: extracted[0].data, encoding: .utf8), "Hello World 123")
+        XCTAssertEqual(extracted[1].name, "test2.json")
+        XCTAssertEqual(String(data: extracted[1].data, encoding: .utf8), "{\"key\": \"value\"}")
+    }
+
+    func testBackupExportAndInspectRoundtrip() throws {
+        let dbQueue = try DatabaseQueue()
+        try AppDatabase.setupMigrations(dbQueue)
+        let service = ApplicationService(dbQueue: dbQueue)
+        
+        UserDefaults.standard.set("## My Musings\n- Thoughts on system architecture.", forKey: "musingsNotesTab")
+        UserDefaults.standard.set("Quick python snippet:\n```python\nprint('hello')\n```", forKey: "homePageNotesDump")
+        UserDefaults.standard.set("Denver, CO|Boulder, CO", forKey: "customLocations")
+        
+        let testQuery = SavedQuery(name: "Test Query", sql: "SELECT * FROM application;")
+        let queryData = try JSONEncoder().encode([testQuery])
+        UserDefaults.standard.set(String(data: queryData, encoding: .utf8)!, forKey: "savedSQLQueriesData")
+        
+        let (zipURL, metadata) = try BackupService.createBackupZip(using: service)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: zipURL.path))
+        XCTAssertTrue(metadata.hasMusings)
+        XCTAssertTrue(metadata.hasDashboardNotes)
+        XCTAssertGreaterThanOrEqual(metadata.customLocationsCount, 2)
+        XCTAssertGreaterThanOrEqual(metadata.savedQueriesCount, 1)
+        
+        let (_, inspected, cleanup) = try BackupService.inspectBackup(from: zipURL)
+        defer { cleanup() }
+        
+        XCTAssertEqual(inspected.hasMusings, true)
+        XCTAssertEqual(inspected.hasDashboardNotes, true)
+        XCTAssertEqual(inspected.savedQueriesCount, metadata.savedQueriesCount)
+        XCTAssertEqual(inspected.customLocationsCount, metadata.customLocationsCount)
+    }
+
+    func testBackupReplaceAllIdempotency() throws {
+        let dbQueue = try DatabaseQueue()
+        try AppDatabase.setupMigrations(dbQueue)
+        let service = ApplicationService(dbQueue: dbQueue)
+        
+        // Prepare mock applications & ledger
+        var app1 = JobApplication(
+            id: 991,
+            companyName: "Idempotency Corp",
+            role: "Site Reliability Engineer",
+            roleExtraNotes: "High availability",
+            duration: "Full-time",
+            season: "Spring 2027",
+            location: "Austin, TX; Remote",
+            notes: "Initial note"
+        )
+        try service.createApplication(&app1, skipLedger: true)
+        
+        var entry1 = LedgerEntry(
+            ledgerId: 9901,
+            createdAt: Date(timeIntervalSince1970: 1700000000),
+            type: .applied,
+            applicationId: 991,
+            update: "Applied via referral",
+            timezone: "America/Chicago"
+        )
+        try service.addLedgerEntry(&entry1)
+        
+        UserDefaults.standard.set("Idempotent Musing Note", forKey: "musingsNotesTab")
+        UserDefaults.standard.set("Idempotent Dashboard Note", forKey: "homePageNotesDump")
+        UserDefaults.standard.set("Miami, FL|Toronto, Canada", forKey: "customLocations")
+        
+        // Export to zip
+        let (zipURL, _) = try BackupService.createBackupZip(using: service)
+        
+        // Run import in replaceAll mode multiple times sequentially
+        for _ in 1...3 {
+            let result = try BackupService.importBackup(from: zipURL, mode: .replaceAll, using: service)
+            XCTAssertGreaterThanOrEqual(result.applicationsCount, 1)
+            XCTAssertGreaterThanOrEqual(result.ledgerCount, 1)
+            
+            let restoredApp = try service.fetchApplication(id: 991)
+            XCTAssertNotNil(restoredApp)
+            XCTAssertEqual(restoredApp?.companyName, "Idempotency Corp")
+            XCTAssertEqual(restoredApp?.location, "Austin, TX; Remote")
+            
+            let musings = UserDefaults.standard.string(forKey: "musingsNotesTab")
+            XCTAssertEqual(musings, "Idempotent Musing Note")
+            
+            let notes = UserDefaults.standard.string(forKey: "homePageNotesDump")
+            XCTAssertEqual(notes, "Idempotent Dashboard Note")
+            
+            let locations = UserDefaults.standard.string(forKey: "customLocations")
+            XCTAssertEqual(locations, "Miami, FL|Toronto, Canada")
+        }
+        
+        // Cleanup test entries
+        try service.deleteApplications(ids: [991])
+        try service.deleteLedgerEntries(ids: [9901])
+    }
+
+    func testBackupMergeMode() throws {
+        let dbQueue = try DatabaseQueue()
+        try AppDatabase.setupMigrations(dbQueue)
+        let service = ApplicationService(dbQueue: dbQueue)
+        
+        // Create initial local application
+        var existingApp = JobApplication(
+            id: 881,
+            companyName: "Local Co",
+            role: "Frontend Dev",
+            roleExtraNotes: nil,
+            duration: "Full-time",
+            season: "Fall 2026",
+            location: "San Francisco, CA",
+            notes: "Local note"
+        )
+        try service.createApplication(&existingApp, skipLedger: true)
+        
+        // Set local preferences
+        UserDefaults.standard.set("Local Musings", forKey: "musingsNotesTab")
+        UserDefaults.standard.set("Tokyo, Japan", forKey: "customLocations")
+        
+        // Create a backup archive from modified state
+        var backupApp = JobApplication(
+            id: 882,
+            companyName: "Remote Co",
+            role: "Backend Dev",
+            roleExtraNotes: nil,
+            duration: "Full-time",
+            season: "Fall 2026",
+            location: "Remote",
+            notes: "Backup note"
+        )
+        try service.createApplication(&backupApp, skipLedger: true)
+        UserDefaults.standard.set("Paris, France", forKey: "customLocations")
+        UserDefaults.standard.set("Backup Musings", forKey: "musingsNotesTab")
+        
+        let (zipURL, _) = try BackupService.createBackupZip(using: service)
+        
+        // Now reset local to only having existingApp and Tokyo
+        try service.deleteApplications(ids: [882])
+        UserDefaults.standard.set("Tokyo, Japan", forKey: "customLocations")
+        UserDefaults.standard.set("Local Musings", forKey: "musingsNotesTab")
+        
+        // Merge backup
+        _ = try BackupService.importBackup(from: zipURL, mode: .merge, using: service)
+        
+        // Check that both applications exist
+        let app881 = try service.fetchApplication(id: 881)
+        let app882 = try service.fetchApplication(id: 882)
+        XCTAssertNotNil(app881)
+        XCTAssertNotNil(app882)
+        
+        // Check locations merged
+        let mergedLocations = (UserDefaults.standard.string(forKey: "customLocations") ?? "").split(separator: "|").map(String.init)
+        XCTAssertTrue(mergedLocations.contains("Tokyo, Japan"))
+        XCTAssertTrue(mergedLocations.contains("Paris, France"))
+        
+        // Cleanup test entries
+        try service.deleteApplications(ids: [881, 882])
+    }
 }
+
 

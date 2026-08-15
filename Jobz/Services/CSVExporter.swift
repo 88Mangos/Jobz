@@ -48,6 +48,41 @@ class CSVExporter {
         return "\(prefix)_\(dateString).csv"
     }
     
+    /// Generates CSV string for JobApplications
+    static func generateApplicationsCSV(_ applications: [JobApplication]) -> String {
+        let headers = ["application_id", "company_name", "role", "role_extra_notes", "duration", "season", "location", "notes"]
+        let rows = applications.map { app in
+            [
+                app.id.map(String.init) ?? "",
+                app.companyName,
+                app.role,
+                app.roleExtraNotes ?? "",
+                app.duration ?? "",
+                app.season ?? "",
+                app.location ?? "",
+                app.notes ?? ""
+            ]
+        }
+        return generateCSV(headers: headers, rows: rows)
+    }
+    
+    /// Generates CSV string for LedgerEntries
+    static func generateLedgerCSV(_ entries: [LedgerEntry]) -> String {
+        let headers = ["ledger_id", "created_at", "type", "application_id", "update", "timezone"]
+        let formatter = ISO8601DateFormatter()
+        let rows = entries.map { entry in
+            [
+                entry.ledgerId.map(String.init) ?? (entry.id != 0 ? String(entry.id) : ""),
+                formatter.string(from: entry.createdAt),
+                entry.type.rawValue,
+                String(entry.applicationId),
+                entry.update ?? "",
+                entry.timezone ?? ""
+            ]
+        }
+        return generateCSV(headers: headers, rows: rows)
+    }
+    
     /// Prompts the user to save the CSV string to a file using NSSavePanel.
     static func exportToFile(csvString: String, defaultFilename: String) {
         DispatchQueue.main.async {
@@ -71,3 +106,4 @@ class CSVExporter {
         }
     }
 }
+

@@ -1,7 +1,7 @@
 import Foundation
 import GRDB
 
-class MetricsService {
+struct MetricsService {
     let dbQueue: DatabaseQueue
     
     init(dbQueue: DatabaseQueue = DatabaseManager.shared.dbQueue) {

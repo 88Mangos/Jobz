@@ -12,6 +12,7 @@ struct ContentView: View {
         case musings
         case sqlLab
         case quickAdd
+        case backup
         case about
     }
     
@@ -49,6 +50,9 @@ struct ContentView: View {
                 }
                 
                 Section("Information") {
+                    NavigationLink(value: SidebarItem.backup) {
+                        Label("Backup & Restore", systemImage: "externaldrive")
+                    }
                     NavigationLink(value: SidebarItem.about) {
                         Label("About & Licenses", systemImage: "info.circle")
                     }
@@ -74,6 +78,8 @@ struct ContentView: View {
                     QuickAddView()
                 case .sqlLab:
                     SQLLabView()
+                case .backup:
+                    BackupView()
                 case .about:
                     AboutView()
                 case nil:
