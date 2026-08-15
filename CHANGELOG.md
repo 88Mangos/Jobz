@@ -13,6 +13,9 @@
 - Dashboard Line Chart date filters are now optional and inactive by default, with a "Reset" button to clear the date bounds.
 - Removed the educational SQLite tooltip from the dashboard line chart.
 
+### Changed
+- Dashboard Line Chart Layout: Restructured the UI to place all controls (header, hover info, date filter, and metric legend) in a left-hand sidebar, allowing the interactive chart to stretch maximally in width and height.
+
 ### Added
 - **Agent Git Workflow Guidelines**: Added memory rules in `.agents/rules/git_workflow.md` requiring conventional commit messages, atomic commits, changelog updates on every commit, and clean build verification prior to committing.
 - Efficient GRDB query in `MetricsService` (`fetchTimeSeriesData`) to fetch time-series data for applications, interviews, and online assessments by week.
