@@ -20,6 +20,10 @@ struct JobApplication: Codable, FetchableRecord, MutablePersistableRecord, Ident
 
     static let databaseTableName = "application"
 
+    mutating func didInsert(with rowID: Int64, for column: String?) {
+        id = rowID
+    }
+
     enum CodingKeys: String, CodingKey {
         case id = "application_id"
         case companyName = "company_name"

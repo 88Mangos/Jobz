@@ -166,4 +166,10 @@ For complete third-party license texts and copyright notices, please consult [`A
 ## AI Disclosure
 I don't know a lick of Swift. Sorry [SwiftCoderJoe](https://github.com/SwiftCoderJoe). In case the clearly vibecoded README hasn't made it obvious yet, this entire app is coded with Gemini + Antigravity, and the icons were also AI-generated.
 
+So how bloated did AI make this repo?
+```sh
+# run cloc, respecting .gitignore
+cloc --vcs=git .
+```
 
+Honestly not too bad. 5300 lines of Swift for a very nicely working app seems good to me!

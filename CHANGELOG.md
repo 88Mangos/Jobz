@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Fixed
+- **Quick Add Initial Applied Event Creation**: Fixed a bug where creating an application via Quick Add, spreadsheet quick-add, or the modal form did not insert the initial `.applied` event into the ledger. Implemented `didInsert` on `JobApplication` and properly returned mutated record models with SQLite-generated auto-increment IDs in `ApplicationService.createApplication`.
+- **Quick Add Location Multi-Select Dropdown**: Replaced generic `MultiSelectMenu` with `MultiSelectLocationMenu` in `QuickAddView` so selected locations (e.g. `"San Francisco, CA; Remote"`) properly render in the dropdown label when collapsed, along with support for custom locations and clear all.
 - **Markdown Rendering**: Replaced native SwiftUI `Text(AttributedString)` with the `Textual` library in `HomeNotesCard` and `ScratchpadView` to fix formatting issues where line breaks were condensed and bullet points were stripped by the native parser.
 - **Multi-Location Selection & Parsing**: Fixed a parsing bug where multi-select location strings split on `", "` broke city/state pairs (e.g. `"San Francisco, CA"`), causing checkmarks to disappear and selections to be dropped. Introduced `LocationParser` to robustly handle city/state formatting, semicolon separators (`"; "`), slash separators (`" / "`), and legacy comma lists.
 - **RFC 4180 CSV Export/Import Roundtripping**: Fixed CSV parsing in `CSVImporter` to process streams character-by-character per RFC 4180. Preserves multiline notes, unescapes double quotes (`""`), and correctly handles commas within quoted fields so exported data can be re-imported perfectly regardless of content size or complex formatting.

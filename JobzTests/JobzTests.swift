@@ -339,6 +339,92 @@ final class JobzTests: XCTestCase {
         // Cleanup test entries
         try service.deleteApplications(ids: [881, 882])
     }
+
+    func testCreateApplicationWithoutExplicitIdCreatesAppliedLedgerEntry() throws {
+        let dbQueue = try DatabaseQueue()
+        try AppDatabase.setupMigrations(dbQueue)
+        let service = ApplicationService(dbQueue: dbQueue)
+        
+        let testDate = Date()
+        var app = JobApplication(
+            companyName: "Acme Corp",
+            role: "Software Engineer",
+            roleExtraNotes: "Distributed systems",
+            duration: "Full-time",
+            season: "Fall 2026",
+            location: "San Francisco, CA",
+            notes: "Referral applied"
+        )
+        try service.createApplication(&app, initialEventDate: testDate, timezone: "America/New_York")
+        
+        // Assert ID was populated upon insert
+        guard let appId = app.id else {
+            XCTFail("app.id should not be nil after insert")
+            return
+        }
+        XCTAssertGreaterThan(appId, 0)
+        
+        // Assert Applied ledger entry was created
+        let ledgerEntries = try service.fetchLedgerEntries(for: appId)
+        XCTAssertEqual(ledgerEntries.count, 1)
+        
+        let entry = ledgerEntries[0]
+        XCTAssertEqual(entry.applicationId, appId)
+        XCTAssertEqual(entry.type, .applied)
+        XCTAssertEqual(entry.update, "Initial Application")
+        XCTAssertEqual(entry.timezone, "America/New_York")
+        XCTAssertEqual(entry.createdAt.timeIntervalSince1970, testDate.timeIntervalSince1970, accuracy: 1.0)
+        
+        // Assert application_status_view derives appliedAt properly
+        let statusRecords = try service.fetchApplications()
+        let record = statusRecords.first { $0.applicationId == appId }
+        XCTAssertNotNil(record)
+        XCTAssertEqual(record?.companyName, "Acme Corp")
+        XCTAssertEqual(record?.appliedAt?.timeIntervalSince1970 ?? 0, testDate.timeIntervalSince1970, accuracy: 1.0)
+        XCTAssertEqual(record?.status, .pending)
+    }
+
+    func testCreateApplicationWithExplicitIdCreatesAppliedLedgerEntry() throws {
+        let dbQueue = try DatabaseQueue()
+        try AppDatabase.setupMigrations(dbQueue)
+        let service = ApplicationService(dbQueue: dbQueue)
+        
+        let testDate = Date(timeIntervalSince1970: 1710000000)
+        var app = JobApplication(
+            id: 777,
+            companyName: "Explicit ID Corp",
+            role: "Platform Engineer",
+            location: "Remote"
+        )
+        
+        try service.createApplication(&app, initialEventDate: testDate, timezone: "UTC")
+        XCTAssertEqual(app.id, 777)
+        
+        let ledgerEntries = try service.fetchLedgerEntries(for: 777)
+        XCTAssertEqual(ledgerEntries.count, 1)
+        XCTAssertEqual(ledgerEntries[0].type, .applied)
+        XCTAssertEqual(ledgerEntries[0].timezone, "UTC")
+    }
+
+    func testCreateApplicationWithSkipLedgerTrue() throws {
+        let dbQueue = try DatabaseQueue()
+        try AppDatabase.setupMigrations(dbQueue)
+        let service = ApplicationService(dbQueue: dbQueue)
+        
+        var app = JobApplication(
+            companyName: "No Ledger Corp",
+            role: "QA Engineer"
+        )
+        
+        try service.createApplication(&app, skipLedger: true)
+        guard let appId = app.id else {
+            XCTFail("app.id should not be nil after insert")
+            return
+        }
+        
+        let ledgerEntries = try service.fetchLedgerEntries(for: appId)
+        XCTAssertEqual(ledgerEntries.count, 0)
+    }
 }
 
 

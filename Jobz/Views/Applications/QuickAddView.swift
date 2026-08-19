@@ -4,7 +4,6 @@ struct QuickAddView: View {
     @State private var existingCompanies: [String] = []
     @State private var existingRoles: [String] = []
     @State private var existingSeasons: [String] = []
-    @State private var existingLocations: [String] = []
     
     @State private var selectedCompany = "__ADD_NEW__"
     @State private var newCompany = ""
@@ -18,13 +17,25 @@ struct QuickAddView: View {
     @State private var newSeason = ""
     
     @State private var duration = ""
-    
-    @State private var selectedLocations = Set<String>()
-    @State private var newLocation = ""
+    @State private var location: String? = nil
     
     @State private var notes = ""
     @State private var date = Date()
+    @State private var timezone: String? = {
+        let currentId = TimeZone.current.identifier
+        let supported = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC"]
+        return supported.contains(currentId) ? currentId : "America/New_York"
+    }()
     @State private var showSuccessMessage = false
+    
+    private var supportedTimezones: [String] {
+        var zones = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC"]
+        let current = TimeZone.current.identifier
+        if !zones.contains(current) {
+            zones.insert(current, at: 0)
+        }
+        return zones
+    }
     
     private let applicationService = ApplicationService()
     
@@ -77,13 +88,18 @@ struct QuickAddView: View {
                         HStack {
                             Text("Locations")
                             Spacer()
-                            MultiSelectMenu(title: "Select Locations", options: existingLocations, selectedOptions: $selectedLocations)
+                            MultiSelectLocationMenu(selectedLocationsStr: $location)
                         }
-                        TextField("Add Custom Location (Optional)", text: $newLocation)
                     }
                     
                     Section(header: Text("Initial Event")) {
                         DatePicker("Applied Date & Time", selection: $date, displayedComponents: [.date, .hourAndMinute])
+                        Picker("Timezone", selection: $timezone) {
+                            Text("None").tag(String?.none)
+                            ForEach(supportedTimezones, id: \.self) { tzId in
+                                Text(TimeZone.formattedLabel(for: tzId, date: date)).tag(String?.some(tzId))
+                            }
+                        }
                     }
                     
                     Section(header: Text("Notes")) {
@@ -138,16 +154,6 @@ struct QuickAddView: View {
             existingCompanies = Array(Set(apps.map { $0.companyName })).sorted()
             existingRoles = Array(Set(apps.map { $0.role })).sorted()
             existingSeasons = Array(Set(apps.compactMap { $0.season }.filter { !$0.isEmpty })).sorted()
-            
-            var locs = Set<String>()
-            for app in apps {
-                if let loc = app.location {
-                    let parts = loc.components(separatedBy: ";").map { $0.trimmingCharacters(in: .whitespaces) }
-                    locs.formUnion(parts)
-                }
-            }
-            locs.remove("")
-            existingLocations = Array(locs).sorted()
         } catch {
             print("Failed to load existing data: \(error)")
         }
@@ -162,23 +168,19 @@ struct QuickAddView: View {
             return selectedSeason
         }()
         
-        let allLocs = Array(selectedLocations) + [newLocation]
-        let validLocs = allLocs.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        let finalLocation = validLocs.isEmpty ? nil : validLocs.joined(separator: "; ")
-        
         var newApp = JobApplication(
             companyName: finalCompany.trimmingCharacters(in: .whitespaces),
             role: finalRole.trimmingCharacters(in: .whitespaces),
             roleExtraNotes: roleExtraNotes.isEmpty ? nil : roleExtraNotes,
             duration: duration.isEmpty ? nil : duration,
             season: finalSeason?.trimmingCharacters(in: .whitespaces),
-            location: finalLocation,
+            location: location,
             notes: notes.isEmpty ? nil : notes
         )
         do {
-            try applicationService.createApplication(&newApp, initialEventDate: date)
+            try applicationService.createApplication(&newApp, initialEventDate: date, timezone: timezone)
             
-            // Reload data to reflect potentially new company/role/season/location
+            // Reload data to reflect potentially new company/role/season
             loadExistingData()
             
             // Reset form
@@ -190,10 +192,14 @@ struct QuickAddView: View {
             selectedSeason = "__ADD_NEW__"
             newSeason = ""
             duration = ""
-            selectedLocations.removeAll()
-            newLocation = ""
+            location = nil
             notes = ""
             date = Date()
+            timezone = {
+                let currentId = TimeZone.current.identifier
+                let supported = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC"]
+                return supported.contains(currentId) ? currentId : "America/New_York"
+            }()
             
             withAnimation {
                 showSuccessMessage = true

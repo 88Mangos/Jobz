@@ -8,20 +8,28 @@ struct ApplicationService {
         self.dbQueue = dbQueue
     }
     
-    func createApplication(_ application: inout JobApplication, initialEventDate: Date = Date(), skipLedger: Bool = false) throws {
-        try dbQueue.write { db in
-            try application.insert(db)
+    func createApplication(_ application: inout JobApplication, initialEventDate: Date = Date(), timezone: String? = nil, skipLedger: Bool = false) throws {
+        application = try dbQueue.write { db in
+            var app = application
+            try app.insert(db)
+            if app.id == nil {
+                app.id = db.lastInsertedRowID
+            }
             
-            guard !skipLedger else { return }
-            guard let appId = application.id else { return }
-            
-            var initialLedger = LedgerEntry(
-                createdAt: initialEventDate,
-                type: .applied,
-                applicationId: appId,
-                update: "Initial Application"
-            )
-            try initialLedger.insert(db)
+            if !skipLedger, let appId = app.id {
+                var initialLedger = LedgerEntry(
+                    createdAt: initialEventDate,
+                    type: .applied,
+                    applicationId: appId,
+                    update: "Initial Application",
+                    timezone: timezone
+                )
+                try initialLedger.insert(db)
+                if initialLedger.ledgerId == nil {
+                    initialLedger.ledgerId = db.lastInsertedRowID
+                }
+            }
+            return app
         }
     }
     
@@ -36,8 +44,13 @@ struct ApplicationService {
     }
     
     func addLedgerEntry(_ entry: inout LedgerEntry) throws {
-        try dbQueue.write { db in
-            try entry.insert(db)
+        entry = try dbQueue.write { db in
+            var e = entry
+            try e.insert(db)
+            if e.ledgerId == nil {
+                e.ledgerId = db.lastInsertedRowID
+            }
+            return e
         }
     }
     
