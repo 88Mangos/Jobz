@@ -4,6 +4,7 @@ struct QuickAddView: View {
     @State private var existingCompanies: [String] = []
     @State private var existingRoles: [String] = []
     @State private var existingSeasons: [String] = []
+    @State private var existingDurations: [String] = []
     
     @State private var selectedCompany = "__ADD_NEW__"
     @State private var newCompany = ""
@@ -16,7 +17,8 @@ struct QuickAddView: View {
     @State private var selectedSeason = "__ADD_NEW__"
     @State private var newSeason = ""
     
-    @State private var duration = ""
+    @State private var selectedDuration = "__NONE__"
+    @State private var newDuration = ""
     @State private var location: String? = nil
     
     @State private var notes = ""
@@ -27,6 +29,18 @@ struct QuickAddView: View {
         return supported.contains(currentId) ? currentId : "America/New_York"
     }()
     @State private var showSuccessMessage = false
+    
+    private let defaultDurations = ["Full-time", "Internship", "Co-op", "Part-time", "Contract"]
+    
+    private var availableDurations: [String] {
+        var list = defaultDurations
+        for d in existingDurations {
+            if !list.contains(d) {
+                list.append(d)
+            }
+        }
+        return list
+    }
     
     private var supportedTimezones: [String] {
         var zones = ["America/New_York", "America/Chicago", "America/Los_Angeles", "UTC"]
@@ -83,7 +97,17 @@ struct QuickAddView: View {
                             TextField("New Season", text: $newSeason)
                         }
                         
-                        TextField("Duration (e.g. Summer, 12 weeks)", text: $duration)
+                        Picker("Job Type", selection: $selectedDuration) {
+                            Text("Add new...").tag("__ADD_NEW__")
+                            Text("None").tag("__NONE__")
+                            Divider()
+                            ForEach(availableDurations, id: \.self) { item in
+                                Text(item).tag(item)
+                            }
+                        }
+                        if selectedDuration == "__ADD_NEW__" {
+                            TextField("New Job Type (e.g. Fellowship)", text: $newDuration)
+                        }
                         
                         HStack {
                             Text("Locations")
@@ -154,6 +178,7 @@ struct QuickAddView: View {
             existingCompanies = Array(Set(apps.map { $0.companyName })).sorted()
             existingRoles = Array(Set(apps.map { $0.role })).sorted()
             existingSeasons = Array(Set(apps.compactMap { $0.season }.filter { !$0.isEmpty })).sorted()
+            existingDurations = Array(Set(apps.compactMap { $0.duration }.filter { !$0.isEmpty })).sorted()
         } catch {
             print("Failed to load existing data: \(error)")
         }
@@ -167,12 +192,20 @@ struct QuickAddView: View {
             if selectedSeason == "__ADD_NEW__" { return newSeason.isEmpty ? nil : newSeason }
             return selectedSeason
         }()
+        let finalDuration: String? = {
+            if selectedDuration == "__NONE__" { return nil }
+            if selectedDuration == "__ADD_NEW__" {
+                let trimmed = newDuration.trimmingCharacters(in: .whitespaces)
+                return trimmed.isEmpty ? nil : trimmed
+            }
+            return selectedDuration
+        }()
         
         var newApp = JobApplication(
             companyName: finalCompany.trimmingCharacters(in: .whitespaces),
             role: finalRole.trimmingCharacters(in: .whitespaces),
             roleExtraNotes: roleExtraNotes.isEmpty ? nil : roleExtraNotes,
-            duration: duration.isEmpty ? nil : duration,
+            duration: finalDuration?.trimmingCharacters(in: .whitespaces),
             season: finalSeason?.trimmingCharacters(in: .whitespaces),
             location: location,
             notes: notes.isEmpty ? nil : notes
@@ -191,7 +224,8 @@ struct QuickAddView: View {
             roleExtraNotes = ""
             selectedSeason = "__ADD_NEW__"
             newSeason = ""
-            duration = ""
+            selectedDuration = "__NONE__"
+            newDuration = ""
             location = nil
             notes = ""
             date = Date()

@@ -16,6 +16,7 @@
 - **Dashboard Chart Unchecked Metrics**: Modified unchecked metrics to render with low opacity instead of being completely removed, keeping the visual context intact while de-emphasizing inactive data series.
 
 ### Changed
+- **Quick Add Job Type (Duration) Dropdown**: Replaced the free-text duration field in `QuickAddView` with a smart `Job Type` dropdown picker containing standard options (*Full-time*, *Internship*, *Co-op*, *Part-time*, *Contract*), existing database values, and an "Add new..." option to align with `ApplicationTableView` and clarify role type entry.
 - Dashboard Line Chart date filters are now optional and inactive by default, with a "Reset" button to clear the date bounds.
 - Removed the educational SQLite tooltip from the dashboard line chart.
 
